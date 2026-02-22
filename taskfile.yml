@@ -1,0 +1,16 @@
+version: "3"
+
+vars:
+  APP_NAME: "terraforge"
+  API_BINARY_NAME: "{{.APP_NAME}}_api.exe"
+
+tasks:
+  api:build:
+    dir: ./apps/api
+    cmd: go build -o ./bin/{{.API_BINARY_NAME}} ./cmd/server/main.go
+  
+  api:start:
+    dir: ./apps/api
+    deps:
+      - task: api:build
+    cmd: ./bin/{{.API_BINARY_NAME}}

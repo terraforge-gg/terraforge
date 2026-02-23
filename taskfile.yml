@@ -14,3 +14,7 @@ tasks:
     deps:
       - task: api:build
     cmd: ./bin/{{.API_BINARY_NAME}}
+
+  auth:start:
+    dir: ./apps/auth
+    cmd: pnpm run dev

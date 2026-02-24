@@ -26,10 +26,7 @@ func NewValidator(jwksURL string) (*Validator, error) {
 		return nil, fmt.Errorf("failed to create JWKS cache: %w", err)
 	}
 
-	registerCtx, registerCancel := context.WithTimeout(ctx, 5*time.Second)
-	defer registerCancel()
-
-	if err := c.Register(registerCtx, jwksURL); err != nil {
+	if err := c.Register(ctx, jwksURL, jwk.WithWaitReady(false)); err != nil {
 		cancel()
 		return nil, fmt.Errorf("failed to register JWKS URL: %w", err)
 	}

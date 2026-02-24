@@ -1,0 +1,211 @@
+openapi: 3.0.4
+info:
+  title: terraforge
+  version: 0.0.1
+
+servers:
+  - url: https://staging-api.terraforge.gg/v1
+    description: Staging server
+  - url: https://api.terraforge.gg/v1
+    description: Production server
+
+security:
+  - bearerAuth: []
+
+paths:
+  /projects:
+    post:
+      summary: Create a new project
+      tags:
+        - Projects
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProjectRequest'
+      responses:
+        '201':
+          description: Project created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+
+components:
+  parameters:
+    ProjectIdentifier:
+      name: id|slug
+      in: path
+      required: true
+      description: The id or slug of the project
+      schema:
+        type: string
+  schemas:
+      Project:
+        type: object
+        required:
+          - id
+          - name
+          - slug
+          - downloads
+          - type
+          - status
+          - createdAt
+          - updatedAt
+        properties:
+          id:
+            type: string
+            description: Unique identifier of the project
+          name:
+            type: string
+            description: Name of the project
+          slug:
+            type: string
+            description: URL-friendly identifier
+          summary:
+            type: string
+            nullable: true
+            description: Short summary of the project
+          description:
+            type: string
+            nullable: true
+            description: Detailed description of the project
+          iconUrl:
+            type: string
+            format: uri
+            nullable: true
+            description: URL to the project's icon
+          downloads:
+            type: integer
+            format: int64
+            description: Number of downloads
+          type:
+            $ref: '#/components/schemas/ProjectType'
+          status:
+            $ref: '#/components/schemas/ProjectStatus'
+          createdAt:
+            type: string
+            format: date-time
+            description: Creation timestamp
+          updatedAt:
+            type: string
+            format: date-time
+            description: Last update timestamp
+          userId:
+            type: string
+            description: Identifier of the user
+      ProjectType:
+        type: string
+        enum:
+          - mod
+      ProjectStatus:
+        type: string
+        enum:
+          - draft
+          - rejected
+          - approved
+          - banned
+      ProjectMember:
+        type: object
+        required:
+          - username
+          - userId
+          - role
+        properties:
+          username:
+            type: string
+          userId: 
+            type: string
+          image:
+            type: string
+          role:
+            $ref: '#/components/schemas/ProjectMemberRole'
+      ProjectMemberRole:
+        type: string
+        enum:
+          - owner
+          - admin
+          - developer
+          - maintainer
+          - member
+
+      CreateProjectRequest:
+        type: object
+        required:
+          - type
+          - name
+          - slug
+        properties:
+          type:
+            $ref: '#/components/schemas/ProjectType'
+          name:
+            type: string
+            minLength: 3
+            maxLength: 100
+            description:  Name of the project
+          slug:
+            type: string
+            minLength: 3
+            maxLength: 100
+            description:  Slug of the project
+          summary:
+            type: string
+            maxLength: 120
+            description: Summary of the project
+
+      ProblemDetails:
+        type: object
+        required:
+          - title
+          - status
+          - detail
+        properties:
+          title:
+            type: string
+            description: A short, human-readable summary of the problem
+          status:
+            type: integer
+            format: int32
+            description: The HTTP status code
+          detail:
+            type: string
+            description: A human-readable explanation specific to this occurrence of the problem
+          errors:
+            type: array
+            description: List of validation errors (if applicable)
+            items:
+              $ref: '#/components/schemas/ValidationError'
+      ValidationError:
+        type: object
+        properties:
+          field:
+            type: string
+            description: Name of the field where the error occurred
+          code:
+            type: string
+            description: Machine-readable error code
+          message:
+            type: string
+            description: Human-readable error message
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+tags:
+  - name: Projects
+    description: Operations related to project management

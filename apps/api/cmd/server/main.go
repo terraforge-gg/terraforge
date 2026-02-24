@@ -28,9 +28,15 @@ func main() {
 
 	if err != nil {
 		logger.Error("An error occurred during migrate", "error", err)
+		return
 	}
 
-	e := server.NewServer(cfg, logger, db)
+	e, err := server.NewServer(cfg, logger, db)
+
+	if err != nil {
+		logger.Error("Failed to create server", "error", err)
+		return
+	}
 
 	go func() {
 		err := e.Start(":" + cfg.HostPort)

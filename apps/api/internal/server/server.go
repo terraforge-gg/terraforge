@@ -2,6 +2,7 @@ package server
 
 import (
 	"database/sql"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"time"
@@ -18,13 +19,13 @@ import (
 	"github.com/terraforge-gg/terraforge/internal/validation"
 )
 
-func NewServer(cfg *config.Config, logger *slog.Logger, db *sql.DB) *echo.Echo {
+func NewServer(cfg *config.Config, logger *slog.Logger, db *sql.DB) (*echo.Echo, error) {
 	e := echo.New()
 
 	jwtValidator, err := auth.NewValidator(cfg.AuthUrl + "/api/auth/jwks")
 
 	if err != nil {
-		logger.Error("Error creating new jwt validator.", "Error: ", err)
+		return nil, fmt.Errorf("failed to create JWKS validator: %w", err)
 	}
 
 	projectRepo := repository.NewProjectRepository()
@@ -64,5 +65,5 @@ func NewServer(cfg *config.Config, logger *slog.Logger, db *sql.DB) *echo.Echo {
 	v1 := e.Group("/v1")
 	v1.POST("/projects", projectHandler.CreateProject, custom_middleware.JWTMiddleware(jwtValidator))
 
-	return e
+	return e, nil
 }

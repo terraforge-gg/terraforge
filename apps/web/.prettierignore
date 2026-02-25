@@ -1,0 +1,6 @@
+package-lock.json
+pnpm-lock.yaml
+.tanstack/
+.output/
+src/routeTree.gen.ts
+src/lib/api/schema.d.ts

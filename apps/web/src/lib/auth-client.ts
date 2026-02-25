@@ -1,9 +1,9 @@
 import { createAuthClient } from "better-auth/react";
-import { usernameClient } from "better-auth/client/plugins";
+import { jwtClient, usernameClient } from "better-auth/client/plugins";
 import { env } from "@/env/client";
 
-export const { signIn, signUp, signOut, useSession, getSession } =
+export const { signIn, signUp, signOut, useSession, getSession, token } =
   createAuthClient({
     baseURL: env.VITE_AUTH_URL,
-    plugins: [usernameClient()],
+    plugins: [usernameClient(), jwtClient()],
   });

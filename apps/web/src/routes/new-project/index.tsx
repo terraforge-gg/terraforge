@@ -1,4 +1,5 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
+import CreateProjectForm from "@/components/project/create-project-form";
 
 export const Route = createFileRoute("/new-project/")({
   component: RouteComponent,
@@ -10,5 +11,9 @@ export const Route = createFileRoute("/new-project/")({
 });
 
 function RouteComponent() {
-  return <div>Hello "/new-project/"!</div>;
+  return (
+    <div className="flex justify-center">
+      <CreateProjectForm />
+    </div>
+  );
 }

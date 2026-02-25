@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as SignUpIndexRouteImport } from './routes/sign-up/index'
 import { Route as SignInIndexRouteImport } from './routes/sign-in/index'
 import { Route as NewProjectIndexRouteImport } from './routes/new-project/index'
+import { Route as ModSlugIndexRouteImport } from './routes/mod/$slug/index'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -34,18 +35,25 @@ const NewProjectIndexRoute = NewProjectIndexRouteImport.update({
   path: '/new-project/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ModSlugIndexRoute = ModSlugIndexRouteImport.update({
+  id: '/mod/$slug/',
+  path: '/mod/$slug/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/new-project/': typeof NewProjectIndexRoute
   '/sign-in/': typeof SignInIndexRoute
   '/sign-up/': typeof SignUpIndexRoute
+  '/mod/$slug/': typeof ModSlugIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/new-project': typeof NewProjectIndexRoute
   '/sign-in': typeof SignInIndexRoute
   '/sign-up': typeof SignUpIndexRoute
+  '/mod/$slug': typeof ModSlugIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -53,13 +61,20 @@ export interface FileRoutesById {
   '/new-project/': typeof NewProjectIndexRoute
   '/sign-in/': typeof SignInIndexRoute
   '/sign-up/': typeof SignUpIndexRoute
+  '/mod/$slug/': typeof ModSlugIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/new-project/' | '/sign-in/' | '/sign-up/'
+  fullPaths: '/' | '/new-project/' | '/sign-in/' | '/sign-up/' | '/mod/$slug/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/new-project' | '/sign-in' | '/sign-up'
-  id: '__root__' | '/' | '/new-project/' | '/sign-in/' | '/sign-up/'
+  to: '/' | '/new-project' | '/sign-in' | '/sign-up' | '/mod/$slug'
+  id:
+    | '__root__'
+    | '/'
+    | '/new-project/'
+    | '/sign-in/'
+    | '/sign-up/'
+    | '/mod/$slug/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -67,6 +82,7 @@ export interface RootRouteChildren {
   NewProjectIndexRoute: typeof NewProjectIndexRoute
   SignInIndexRoute: typeof SignInIndexRoute
   SignUpIndexRoute: typeof SignUpIndexRoute
+  ModSlugIndexRoute: typeof ModSlugIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -99,6 +115,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof NewProjectIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/mod/$slug/': {
+      id: '/mod/$slug/'
+      path: '/mod/$slug'
+      fullPath: '/mod/$slug/'
+      preLoaderRoute: typeof ModSlugIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -107,6 +130,7 @@ const rootRouteChildren: RootRouteChildren = {
   NewProjectIndexRoute: NewProjectIndexRoute,
   SignInIndexRoute: SignInIndexRoute,
   SignUpIndexRoute: SignUpIndexRoute,
+  ModSlugIndexRoute: ModSlugIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

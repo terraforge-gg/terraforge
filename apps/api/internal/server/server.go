@@ -42,9 +42,10 @@ func NewServer(cfg *config.Config, logger *slog.Logger, db *sql.DB) (*echo.Echo,
 	e.Use(middleware.RequestID())
 	e.Use(middleware.Recover())
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins: []string{cfg.FrontendUrl},
-		AllowMethods: []string{http.MethodGet, http.MethodHead, http.MethodPut, http.MethodPatch, http.MethodPost, http.MethodDelete},
-		AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept, echo.HeaderAuthorization},
+		AllowOrigins:     []string{cfg.FrontendUrl},
+		AllowMethods:     []string{http.MethodGet, http.MethodHead, http.MethodPut, http.MethodPatch, http.MethodPost, http.MethodDelete},
+		AllowHeaders:     []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept, echo.HeaderAuthorization},
+		AllowCredentials: true,
 	}))
 
 	e.GET("/", func(c *echo.Context) error {
@@ -64,6 +65,8 @@ func NewServer(cfg *config.Config, logger *slog.Logger, db *sql.DB) (*echo.Echo,
 	v1 := e.Group("/v1")
 	v1.File("/openapi.yml", "./docs/openapi.yml")
 	v1.POST("/projects", projectHandler.CreateProject, custom_middleware.JWTMiddleware(jwtValidator))
+	v1.GET("/projects/:identifier", projectHandler.GetProjectByIdentifier, custom_middleware.OptionalJWTMiddleware(jwtValidator))
+	v1.GET("/projects/:identifier/members", projectHandler.GetProjectMembers, custom_middleware.OptionalJWTMiddleware(jwtValidator))
 
 	return e, nil
 }

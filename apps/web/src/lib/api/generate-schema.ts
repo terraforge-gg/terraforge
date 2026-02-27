@@ -1,11 +1,11 @@
-import { env } from "@/env/client";
+import { env } from "@/env";
 import { exec } from "node:child_process";
 import { promisify } from "node:util";
 
 const execPromise = promisify(exec);
 
 async function generateSchema(): Promise<void> {
-  const url = `${env.VITE_API_URL}/${env.VITE_API_VERSION}/openapi.yml`;
+  const url = `${env.NEXT_PUBLIC_API_URL}/${env.NEXT_PUBLIC_API_VERSION}/openapi.yml`;
   const output = "./src/lib/api/schema.d.ts";
   try {
     console.error(`Generating schema for ${url}...`);

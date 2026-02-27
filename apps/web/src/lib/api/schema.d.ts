@@ -62,6 +62,117 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/projects/{id|slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The id or slug of the project */
+                "id|slug": components["parameters"]["ProjectIdentifier"];
+            };
+            cookie?: never;
+        };
+        /** Find project by id or slug */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The id or slug of the project */
+                    "id|slug": components["parameters"]["ProjectIdentifier"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description successful operation */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Project"];
+                    };
+                };
+                /** @description Bad request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/projects/{id|slug}/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The id or slug of the project */
+                "id|slug": components["parameters"]["ProjectIdentifier"];
+            };
+            cookie?: never;
+        };
+        /** List project members */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The id or slug of the project */
+                    "id|slug": components["parameters"]["ProjectIdentifier"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description successful operation */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProjectMember"][];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {

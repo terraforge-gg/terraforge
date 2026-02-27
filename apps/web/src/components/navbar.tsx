@@ -1,5 +1,5 @@
+"use client";
 import { LogOutIcon, PlusIcon, User2Icon } from "lucide-react";
-import { Link } from "@tanstack/react-router";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { signOut, useSession } from "@/lib/auth-client";
 import {
@@ -12,21 +12,23 @@ import {
 } from "@/components/ui/dropdown-menu";
 import UserAvatar, { UserAvatarSkeleton } from "@/components/user/user-avatar";
 import { useState } from "react";
+import Link from "./link";
+import { useRouter } from "next/navigation";
 
 const Navbar = () => {
   const { data: session, isPending } = useSession();
   const [open, setOpen] = useState(false);
+  const router = useRouter();
 
   return (
     <header className="light:bg-gray-100/60 inset-x-0 top-0 z-10 py-4 hidden sm:block">
       <div className="flex h-full items-center justify-between gap-2">
         <div className="flex items-center gap-8 text-xl">
-          <Link to="/">
+          <Link href="/">
             <span className="text-foreground font-extrabold">terraforge</span>
           </Link>
           <Link
-            to="/"
-            search={{ query: undefined, page: undefined, perPage: undefined }}
+            href="/"
             className="text-foreground hover:decoration-primary text-lg font-semibold decoration-2 underline-offset-4 hover:underline"
             activeProps={{ className: "decoration-primary underline" }}
           >
@@ -45,7 +47,7 @@ const Navbar = () => {
                 <DropdownMenuItem asChild>
                   <Link
                     className="hover:cursor-pointer"
-                    to="/new-project"
+                    href="/new"
                     onClick={() => setOpen(false)}
                   >
                     Create Project
@@ -70,7 +72,7 @@ const Navbar = () => {
                 <DropdownMenuContent>
                   <DropdownMenuLabel>My Account</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <Link to="/">
+                  <Link href="/">
                     <DropdownMenuItem className="hover:bg-accent hover:cursor-pointer">
                       <User2Icon className="mr-2 h-4 w-4" />
                       <span>Profile</span>
@@ -79,7 +81,10 @@ const Navbar = () => {
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     className="hover:bg-accent hover:cursor-pointer"
-                    onClick={() => signOut()}
+                    onClick={() => {
+                      signOut();
+                      router.push("/");
+                    }}
                   >
                     <LogOutIcon className="mr-2 h-4 w-4" />
                     <span>Log out</span>
@@ -90,7 +95,7 @@ const Navbar = () => {
           ) : (
             <div className="flex gap-4">
               <Link
-                to="/sign-in"
+                href="/sign-in"
                 className={buttonVariants({ variant: "outline" })}
               >
                 Sign In

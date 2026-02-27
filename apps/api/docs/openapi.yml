@@ -43,6 +43,57 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
+  /projects/{id|slug}:
+    parameters:
+      - $ref: '#/components/parameters/ProjectIdentifier'
+    get:
+      tags:
+        - Projects
+      summary: Find project by id or slug
+      security: []
+      responses:
+        '200':
+          description: successful operation
+          content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Project'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /projects/{id|slug}/members:
+    parameters:
+      - $ref: '#/components/parameters/ProjectIdentifier'
+    get:
+      tags:
+        - Projects
+      summary: List project members
+      security: []
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                minItems: 0
+                items:
+                  $ref: '#/components/schemas/ProjectMember'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
 
 components:
   parameters:

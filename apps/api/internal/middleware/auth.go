@@ -59,3 +59,32 @@ func JWTMiddleware(v *auth.Validator) echo.MiddlewareFunc {
 		}
 	}
 }
+
+func OptionalJWTMiddleware(v *auth.Validator) echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c *echo.Context) error {
+			authHeader := c.Request().Header.Get("Authorization")
+			if authHeader == "" {
+				return next(c)
+			}
+
+			parts := strings.SplitN(authHeader, " ", 2)
+			if len(parts) != 2 || !strings.EqualFold(parts[0], "bearer") {
+				return next(c)
+			}
+
+			token, err := v.ValidateToken(parts[1])
+			if err != nil {
+				return next(c)
+			}
+
+			var id string
+			if err = token.Get("id", &id); err != nil {
+				return next(c)
+			}
+
+			c.Set("userId", id)
+			return next(c)
+		}
+	}
+}

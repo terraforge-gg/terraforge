@@ -3,10 +3,12 @@ package service
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"log/slog"
 	"time"
 
-	"github.com/terraforge-gg/terraforge/internal/errors"
+	"github.com/terraforge-gg/terraforge/internal/database"
+	custom_errors "github.com/terraforge-gg/terraforge/internal/errors"
 	"github.com/terraforge-gg/terraforge/internal/models"
 	"github.com/terraforge-gg/terraforge/internal/repository"
 	"github.com/terraforge-gg/terraforge/internal/utils"
@@ -49,16 +51,6 @@ func (s *projectService) CreateUserProject(ctx context.Context, params CreateUse
 		UserId:    params.UserId,
 	}
 
-	exists, err := s.projectRepo.FindProjectByIdentifierIncludeDeleted(ctx, s.db, project.Slug, project.Type)
-
-	if err != nil {
-		panic(err)
-	}
-
-	if exists != nil {
-		return nil, errors.ErrProjectSlugUsed
-	}
-
 	tx, err := s.db.BeginTx(ctx, nil)
 	defer tx.Rollback()
 
@@ -69,6 +61,10 @@ func (s *projectService) CreateUserProject(ctx context.Context, params CreateUse
 	err = s.projectRepo.InsertProject(ctx, tx, project)
 
 	if err != nil {
+		switch {
+		case errors.Is(err, database.ErrUniqueViolation):
+			return nil, custom_errors.ErrProjectSlugUsed
+		}
 		panic(err)
 	}
 
@@ -97,18 +93,18 @@ func (s *projectService) CreateUserProject(ctx context.Context, params CreateUse
 
 type GetProjectByIdentifierParams struct {
 	Identifier string
-	Type       models.ProjectType
+	UserId     *string
 }
 
 func (s *projectService) GetProjectByIdentifier(ctx context.Context, params GetProjectByIdentifierParams) (*models.Project, error) {
-	project, err := s.projectRepo.FindProjectByIdentifier(ctx, s.db, params.Identifier, params.Type)
+	project, err := s.projectRepo.FindProjectByIdentifier(ctx, s.db, params.Identifier, params.UserId)
 
 	if err != nil {
 		panic(err)
 	}
 
 	if project == nil {
-		return nil, errors.ErrProjectNotFound
+		return nil, custom_errors.ErrProjectNotFound
 	}
 
 	return project, nil
@@ -116,24 +112,18 @@ func (s *projectService) GetProjectByIdentifier(ctx context.Context, params GetP
 
 type GetProjectMembersParams struct {
 	Identifier string
-	Type       models.ProjectType
+	UserId     *string
 }
 
 func (s *projectService) GetProjectMembers(ctx context.Context, params GetProjectByIdentifierParams) ([]models.ProjectMember, error) {
-	project, err := s.projectRepo.FindProjectByIdentifier(ctx, s.db, params.Identifier, params.Type)
+	members, err := s.projectRepo.FindProjectMembersByProjectIdentifier(ctx, s.db, params.Identifier, params.UserId)
 
 	if err != nil {
 		panic(err)
 	}
 
-	if project == nil {
-		return nil, errors.ErrProjectNotFound
-	}
-
-	members, err := s.projectRepo.FindProjectMembersByProjectId(ctx, s.db, project.Id)
-
-	if err != nil {
-		panic(err)
+	if members == nil {
+		return nil, custom_errors.ErrProjectNotFound
 	}
 
 	return members, nil

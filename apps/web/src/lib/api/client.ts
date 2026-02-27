@@ -1,28 +1,41 @@
 import createClient from "openapi-fetch";
-import type {Middleware} from "openapi-fetch";
+import type { Middleware } from "openapi-fetch";
 import type { paths } from "./schema";
-import { env } from "@/env/client";
+import { env } from "@/env";
 import { token } from "../auth-client";
 
 export const client = createClient<paths>({
-  baseUrl: env.VITE_API_URL + "/" + env.VITE_API_VERSION,
+  baseUrl: env.NEXT_PUBLIC_API_URL + "/" + env.NEXT_PUBLIC_API_VERSION,
+  credentials: "include",
 });
 
-const PROTECTED_ROUTES = ["/projects"];
-const PROTECTED_METHODS = ["POST", "PATCH", "PUT", "DELETE"];
-
 const auth: Middleware = {
-  async onRequest({ request, schemaPath }) {
-    if (
-      PROTECTED_METHODS.includes(request.method) &&
-      PROTECTED_ROUTES.some((pathname) => schemaPath.startsWith(pathname))
-    ) {
-      const { data, error } = await token();
+  async onRequest({ request }) {
+    let cookie: string | undefined;
 
-      if (error) {
-        throw new Error(error.message);
+    if (typeof window === "undefined") {
+      try {
+        const { cookies } = await import("next/headers");
+        const cookieStore = await cookies();
+        cookie = cookieStore.toString();
+      } catch {
+        cookie = undefined;
       }
+    }
 
+    const options = cookie
+      ? {
+          fetchOptions: {
+            headers: {
+              cookie: cookie,
+            },
+          },
+        }
+      : undefined;
+
+    const { data, error } = await token(options);
+
+    if (data && !error) {
       request.headers.set("Authorization", `Bearer ${data.token}`);
     }
 

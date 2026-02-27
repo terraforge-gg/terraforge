@@ -1,7 +1,7 @@
+"use client";
 import { useForm } from "@tanstack/react-form";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { useNavigate } from "@tanstack/react-router";
 import type z from "zod";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -19,11 +19,12 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { createProjectSchema } from "@/lib/api/models/project/create";
 import apiService from "@/lib/api/service";
-import { env } from "@/env/client";
-import { Button } from "../ui/button";
+import { env } from "@/env";
+import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
 
 const CreateProjectForm = () => {
-  const navigate = useNavigate();
+  const router = useRouter();
 
   const defaultValues: z.input<typeof createProjectSchema> = {
     type: "mod",
@@ -49,10 +50,7 @@ const CreateProjectForm = () => {
     mutationFn: apiService.project.create,
     onSuccess: (data) => {
       form.reset();
-      navigate({
-        to: "/mod/$slug",
-        params: { slug: data.slug },
-      });
+      router.push(`/mods/${data.slug}`);
     },
     onError: (error) => {
       toast.error(error.message);
@@ -112,7 +110,9 @@ const CreateProjectForm = () => {
                     <FieldLabel htmlFor={field.name}>Slug</FieldLabel>
                     <InputGroup>
                       <InputGroupAddon>
-                        <InputGroupText>{env.VITE_APP_URL}/mod/</InputGroupText>
+                        <InputGroupText>
+                          {env.NEXT_PUBLIC_APP_URL}/mods/
+                        </InputGroupText>
                       </InputGroupAddon>
                       <InputGroupInput
                         id={field.name}

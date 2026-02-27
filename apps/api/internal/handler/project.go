@@ -28,13 +28,20 @@ func NewProjectHandler(cfg *config.Config, logger *slog.Logger, projectService s
 	}
 }
 
-func (h *ProjectHandler) GetModByIdentifier(c *echo.Context) error {
+func (h *ProjectHandler) GetProjectByIdentifier(c *echo.Context) error {
 	identifier := c.Param("identifier")
+	_userId := c.Get("userId")
 	ctx := c.Request().Context()
+
+	var userId *string = nil
+	if _userId != nil {
+		s := _userId.(string)
+		userId = &s
+	}
 
 	project, err := h.projectService.GetProjectByIdentifier(ctx, service.GetProjectByIdentifierParams{
 		Identifier: identifier,
-		Type:       models.ProjectTypeMod,
+		UserId:     userId,
 	})
 
 	if err != nil {
@@ -53,13 +60,20 @@ func (h *ProjectHandler) GetModByIdentifier(c *echo.Context) error {
 	return c.JSON(http.StatusOK, dto.ProjectToProjectResponse(*project))
 }
 
-func (h *ProjectHandler) GetModMembers(c *echo.Context) error {
+func (h *ProjectHandler) GetProjectMembers(c *echo.Context) error {
 	identifier := c.Param("identifier")
+	_userId := c.Get("userId")
 	ctx := c.Request().Context()
+
+	var userId *string = nil
+	if _userId != nil {
+		s := _userId.(string)
+		userId = &s
+	}
 
 	members, err := h.projectService.GetProjectMembers(ctx, service.GetProjectByIdentifierParams{
 		Identifier: identifier,
-		Type:       models.ProjectTypeMod,
+		UserId:     userId,
 	})
 
 	if err != nil {

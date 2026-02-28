@@ -116,10 +116,94 @@ export interface paths {
         };
         put?: never;
         post?: never;
-        delete?: never;
+        /** Delete project */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The id or slug of the project */
+                    "id|slug": components["parameters"]["ProjectIdentifier"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description successful operation */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bad request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
         options?: never;
         head?: never;
-        patch?: never;
+        /** Update project */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The id or slug of the project */
+                    "id|slug": components["parameters"]["ProjectIdentifier"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["UpdateProjectRequest"];
+                };
+            };
+            responses: {
+                /** @description successful operation */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Project"];
+                    };
+                };
+                /** @description Bad request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
         trace?: never;
     };
     "/projects/{id|slug}/members": {
@@ -233,6 +317,18 @@ export interface components {
             slug: string;
             /** @description Summary of the project */
             summary?: string;
+        };
+        UpdateProjectRequest: {
+            /** @description Name of the project */
+            name?: string;
+            /** @description Slug of the project */
+            slug?: string;
+            /** @description Summary of the project */
+            summary?: string;
+            /** @description Description of the project */
+            description?: string;
+            /** @description Icon url of the project */
+            iconUrl?: string;
         };
         ProblemDetails: {
             /** @description A short, human-readable summary of the problem */

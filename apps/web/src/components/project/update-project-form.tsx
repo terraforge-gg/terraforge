@@ -1,78 +1,95 @@
 "use client";
-import { useForm } from "@tanstack/react-form";
+import { useForm, useStore } from "@tanstack/react-form";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import type z from "zod";
+import type { Project } from "@/lib/api/types";
+import { getChangedFields } from "@/lib/utils";
+import apiService from "@/lib/api/service";
 import {
   Field,
   FieldError,
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field";
-import { InputGroup, InputGroupInput } from "@/components/ui/input-group";
-import { signIn, signUp } from "@/lib/auth-client";
-import { Icons } from "@/components/icons";
-import { signUpSchema } from "@/lib/api/models/user/auth";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+  InputGroupText,
+  InputGroupTextarea,
+} from "@/components/ui/input-group";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { updateProjectSchema } from "@/lib/api/models/project/update";
+import type { UpdateProjectParams } from "@/lib/api/models/project/update";
+import { Button } from "../ui/button";
 import { useRouter } from "next/navigation";
-import Link from "@/components/link";
+import { env } from "@/env";
 
-const SignUpPage = () => {
+type UpdateProjectFormProps = {
+  project: Project;
+};
+
+const UpdateProjectForm = ({ project }: UpdateProjectFormProps) => {
+  const queryClient = useQueryClient();
   const router = useRouter();
+  const defaultValues: z.input<typeof updateProjectSchema> = {
+    name: project.name,
+    slug: project.slug,
+    summary: project.summary ?? undefined,
+    iconUrl: project.iconUrl ?? undefined,
+  };
+
   const form = useForm({
-    defaultValues: {
-      username: "",
-      email: "",
-      password: "",
-    },
+    defaultValues,
     validators: {
-      onSubmit: signUpSchema,
+      onSubmit: updateProjectSchema,
     },
-    onSubmit: async ({ value }) => {
-      const { error } = await signUp.email({
-        name: value.username,
-        username: value.username,
-        email: value.email,
-        password: value.password,
-        displayUsername: value.username,
+    onSubmit: ({ value }) => {
+      updateProject({
+        projectIdentifier: project.id,
+        values: getChangedFields(value, defaultValues),
       });
+    },
+  });
 
+  const isDefaultValue = useStore(form.store, (state) => state.isDefaultValue);
+
+  const { mutate: updateProject, isPending: isUpdatePending } = useMutation({
+    mutationFn: (variables: UpdateProjectParams) => {
+      return apiService.project.update({
+        projectIdentifier: variables.projectIdentifier,
+        values: variables.values,
+      });
+    },
+    onSuccess: async () => {
+      const newSlug = form.getFieldValue("slug");
       form.reset();
-
-      if (error) {
-        if (error.status === 401) {
-          toast.error(error.message);
-        } else {
-          toast.error("Something went wrong.");
-        }
+      if (newSlug && newSlug != defaultValues.slug) {
+        router.push(`/mods/${newSlug}/settings`);
       } else {
-        router.push("/");
+        queryClient.invalidateQueries({
+          queryKey: ["project", { identifier: project.slug }],
+        });
+
+        router.refresh();
       }
+    },
+    onError: (error) => {
+      toast.error(error.message);
     },
   });
 
   return (
-    <div className="flex justify-center items-center">
-      <Card className="w-96">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl">Sign up</CardTitle>
-          <CardDescription>
-            Already have an account?{" "}
-            <Link href="/sign-in" className="text-primary">
-              Sign in
-            </Link>
-            .
-          </CardDescription>
+    <div className="flex flex-col gap-4">
+      <Card>
+        <CardHeader>
+          <CardTitle>Project Information</CardTitle>
         </CardHeader>
-        <CardContent className="grid gap-4">
+        <CardContent>
           <form
-            id="sign-up-form"
-            className="space-y-4"
+            id="update-project-form"
+            className="flex flex-col gap-4"
             onSubmit={(e) => {
               e.preventDefault();
               form.handleSubmit();
@@ -80,13 +97,13 @@ const SignUpPage = () => {
           >
             <FieldGroup>
               <form.Field
-                name="username"
+                name="name"
                 children={(field) => {
                   const isInvalid =
                     field.state.meta.isTouched && !field.state.meta.isValid;
                   return (
                     <Field>
-                      <FieldLabel htmlFor={field.name}>Username</FieldLabel>
+                      <FieldLabel htmlFor={field.name}>Name</FieldLabel>
                       <InputGroup>
                         <InputGroupInput
                           id={field.name}
@@ -108,15 +125,15 @@ const SignUpPage = () => {
             </FieldGroup>
             <FieldGroup>
               <form.Field
-                name="email"
+                name="summary"
                 children={(field) => {
                   const isInvalid =
                     field.state.meta.isTouched && !field.state.meta.isValid;
                   return (
-                    <Field>
-                      <FieldLabel htmlFor={field.name}>Email</FieldLabel>
+                    <Field data-invalid={isInvalid}>
+                      <FieldLabel htmlFor={field.name}>Summary</FieldLabel>
                       <InputGroup>
-                        <InputGroupInput
+                        <InputGroupTextarea
                           id={field.name}
                           name={field.name}
                           value={field.state.value}
@@ -125,6 +142,9 @@ const SignUpPage = () => {
                           aria-invalid={isInvalid}
                           autoComplete="off"
                         />
+                        <InputGroupAddon align="block-end">
+                          <InputGroupText className="ml-auto">{`${field.state.value?.length ?? 0}/120`}</InputGroupText>
+                        </InputGroupAddon>
                       </InputGroup>
                       {isInvalid && (
                         <FieldError errors={field.state.meta.errors} />
@@ -136,15 +156,19 @@ const SignUpPage = () => {
             </FieldGroup>
             <FieldGroup>
               <form.Field
-                name="password"
+                name="slug"
                 children={(field) => {
                   const isInvalid =
                     field.state.meta.isTouched && !field.state.meta.isValid;
                   return (
                     <Field>
-                      <FieldLabel htmlFor={field.name}>Password</FieldLabel>
+                      <FieldLabel htmlFor={field.name}>Slug</FieldLabel>
                       <InputGroup>
+                        <InputGroupAddon>
+                          <InputGroupText>{`${env.NEXT_PUBLIC_APP_URL}/mods/`}</InputGroupText>
+                        </InputGroupAddon>
                         <InputGroupInput
+                          className="pl-0!"
                           id={field.name}
                           name={field.name}
                           value={field.state.value}
@@ -152,7 +176,6 @@ const SignUpPage = () => {
                           onChange={(e) => field.handleChange(e.target.value)}
                           aria-invalid={isInvalid}
                           autoComplete="off"
-                          type="password"
                         />
                       </InputGroup>
                       {isInvalid && (
@@ -163,44 +186,19 @@ const SignUpPage = () => {
                 }}
               />
             </FieldGroup>
-            <form.Subscribe
-              selector={(state) => [
-                state.isSubmitting,
-                state.isSubmitSuccessful,
-              ]}
-              children={([isSubmitting]) => (
-                <Field>
-                  <Button type="submit" disabled={isSubmitting}>
-                    Sign Up
-                  </Button>
-                </Field>
-              )}
-            />
+            <Field className="w-32">
+              <Button
+                type="submit"
+                disabled={isDefaultValue || isUpdatePending}
+              >
+                Save Changes
+              </Button>
+            </Field>
           </form>
-          <div className="flex justify-center">
-            <div className="flex justify-center text-xs uppercase">
-              <span className="px-2 text-muted-foreground">
-                Or continue with
-              </span>
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-6">
-            <Button
-              variant="outline"
-              onClick={async () => {
-                await signIn.social({
-                  provider: "discord",
-                });
-              }}
-            >
-              <Icons.discord className="mr-2 h-4 w-4" />
-              Discord
-            </Button>
-          </div>
         </CardContent>
       </Card>
     </div>
   );
 };
 
-export default SignUpPage;
+export default UpdateProjectForm;

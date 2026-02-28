@@ -23,6 +23,8 @@ func NewServer(cfg *config.Config, logger *slog.Logger, db *sql.DB) (*echo.Echo,
 	e := echo.New()
 
 	jwtValidator, err := auth.NewValidator(cfg.AuthUrl + "/api/auth/jwks")
+	authMiddleware := custom_middleware.JWTMiddleware(jwtValidator)
+	authOptionalMiddleware := custom_middleware.OptionalJWTMiddleware(jwtValidator)
 
 	if err != nil {
 		return nil, fmt.Errorf("failed to create JWKS validator: %w", err)
@@ -64,9 +66,11 @@ func NewServer(cfg *config.Config, logger *slog.Logger, db *sql.DB) (*echo.Echo,
 
 	v1 := e.Group("/v1")
 	v1.File("/openapi.yml", "./docs/openapi.yml")
-	v1.POST("/projects", projectHandler.CreateProject, custom_middleware.JWTMiddleware(jwtValidator))
-	v1.GET("/projects/:identifier", projectHandler.GetProjectByIdentifier, custom_middleware.OptionalJWTMiddleware(jwtValidator))
-	v1.GET("/projects/:identifier/members", projectHandler.GetProjectMembers, custom_middleware.OptionalJWTMiddleware(jwtValidator))
+	v1.POST("/projects", projectHandler.CreateProject, authMiddleware)
+	v1.GET("/projects/:identifier", projectHandler.GetProjectByIdentifier, authOptionalMiddleware)
+	v1.GET("/projects/:identifier/members", projectHandler.GetProjectMembers, authOptionalMiddleware)
+	v1.PATCH("/projects/:identifier", projectHandler.UpdateProject, authMiddleware)
+	v1.DELETE("/projects/:identifier", projectHandler.DeleteProject, authMiddleware)
 
 	return e, nil
 }

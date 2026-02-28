@@ -18,6 +18,8 @@ type ProjectService interface {
 	CreateUserProject(ctx context.Context, params CreateUserProjectParams) (*models.Project, error)
 	GetProjectByIdentifier(ctx context.Context, params GetProjectByIdentifierParams) (*models.Project, error)
 	GetProjectMembers(ctx context.Context, params GetProjectByIdentifierParams) ([]models.ProjectMember, error)
+	UpdateProject(ctx context.Context, params UpdateProjectParams) (*models.Project, error)
+	DeleteProject(ctx context.Context, params DeleteProjectParams) error
 }
 
 type projectService struct {
@@ -127,4 +129,142 @@ func (s *projectService) GetProjectMembers(ctx context.Context, params GetProjec
 	}
 
 	return members, nil
+}
+
+type UpdateProjectParams struct {
+	Identifier  string
+	Name        *string
+	Slug        *string
+	Summary     *string
+	Description *string
+	IconUrl     *string
+	UserId      string
+}
+
+func (s *projectService) UpdateProject(ctx context.Context, params UpdateProjectParams) (*models.Project, error) {
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		panic(err)
+	}
+
+	defer tx.Rollback()
+
+	project, err := s.projectRepo.FindProjectByIdentifier(ctx, tx, params.Identifier, &params.UserId)
+
+	if err != nil {
+		panic(err)
+	}
+
+	if project == nil {
+		return nil, custom_errors.ErrProjectNotFound
+	}
+
+	projectMember, err := s.projectRepo.FindProjectMemberByProjectIdAndUserId(ctx, s.db, project.Id, params.UserId)
+
+	if err != nil {
+		panic(err)
+	}
+
+	if projectMember == nil {
+		return nil, custom_errors.ErrProjectNotFound
+	}
+
+	if projectMember.Role != models.ProjectMemberRoleOwner {
+		return nil, custom_errors.ErrProjectUnauthorisedAction
+	}
+
+	if params.Name != nil {
+		project.Name = *params.Name
+	}
+
+	if params.Slug != nil {
+		project.Slug = *params.Slug
+	}
+
+	if params.Summary != nil {
+		if *params.Summary == "" {
+			project.Summary = nil
+		} else {
+			project.Summary = params.Summary
+		}
+	}
+
+	if params.Description != nil {
+		if *params.Description == "" {
+			project.Description = nil
+		} else {
+			project.Description = params.Description
+		}
+	}
+
+	if params.IconUrl != nil {
+		if *params.IconUrl == "" {
+			project.IconUrl = nil
+		} else {
+			project.IconUrl = params.IconUrl
+		}
+	}
+
+	err = s.projectRepo.UpdateProject(ctx, tx, *project)
+
+	if err != nil {
+		panic(err)
+	}
+
+	err = tx.Commit()
+
+	if err != nil {
+		panic(err)
+	}
+
+	return project, nil
+}
+
+type DeleteProjectParams struct {
+	Identifier string
+	UserId     string
+}
+
+func (s *projectService) DeleteProject(ctx context.Context, params DeleteProjectParams) error {
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		panic(err)
+	}
+
+	defer tx.Rollback()
+
+	project, err := s.projectRepo.FindProjectByIdentifier(ctx, tx, params.Identifier, &params.UserId)
+
+	if err != nil {
+		panic(err)
+	}
+
+	if project == nil {
+		return custom_errors.ErrProjectNotFound
+	}
+
+	projectMember, err := s.projectRepo.FindProjectMemberByProjectIdAndUserId(ctx, s.db, project.Id, params.UserId)
+
+	if err != nil {
+		panic(err)
+	}
+
+	if projectMember == nil {
+		return custom_errors.ErrProjectNotFound
+	}
+
+	if projectMember.Role != models.ProjectMemberRoleOwner {
+		return custom_errors.ErrProjectUnauthorisedAction
+	}
+
+	deletedAt := time.Now().UTC()
+	err = s.projectRepo.DeleteProjectByIdentifier(ctx, tx, project.Id, deletedAt)
+
+	err = tx.Commit()
+
+	if err != nil {
+		panic(err)
+	}
+
+	return nil
 }

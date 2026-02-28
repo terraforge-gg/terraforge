@@ -17,6 +17,9 @@ type ProjectRepository interface {
 	FindProjectByIdentifier(ctx context.Context, q database.Querier, projectIdentifier string, userId *string) (*models.Project, error)
 	FindProjectByIdentifierIncludeDeleted(ctx context.Context, q database.Querier, projectIdentifier string) (*models.Project, error)
 	FindProjectMembersByProjectIdentifier(ctx context.Context, q database.Querier, projectIdentifier string, userId *string) ([]models.ProjectMember, error)
+	UpdateProject(ctx context.Context, q database.Querier, project models.Project) error
+	FindProjectMemberByProjectIdAndUserId(ctx context.Context, q database.Querier, projectId string, userId string) (*models.ProjectMember, error)
+	DeleteProjectByIdentifier(ctx context.Context, q database.Querier, identifier string, deletedAt time.Time) error
 }
 
 type projectRepository struct{}
@@ -262,4 +265,76 @@ func (r *projectRepository) FindProjectMembersByProjectIdentifier(ctx context.Co
 	}
 
 	return projectMembers, nil
+}
+
+func (r *projectRepository) UpdateProject(ctx context.Context, q database.Querier, project models.Project) error {
+	query := `
+        UPDATE project
+        SET "name" = $2,
+			"slug" = $3,
+            "summary" = $4,
+            "description" = $5,
+			"iconUrl" = $6,
+            "updatedAt" = now()
+        WHERE id = $1 AND "deletedAt" IS NULL;
+    `
+
+	_, err := q.ExecContext(ctx, query,
+		project.Id,
+		project.Name,
+		project.Slug,
+		project.Summary,
+		project.Description,
+		project.IconUrl)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *projectRepository) FindProjectMemberByProjectIdAndUserId(ctx context.Context, q database.Querier, projectId string, userId string) (*models.ProjectMember, error) {
+	query := `
+		SELECT
+			"id",
+			"projectId",
+			"userId",
+			"role",
+			"createdAt"
+		FROM "project_member" 
+		WHERE ("projectId" = $1 AND "userId" = $2);`
+
+	projectMember := &models.ProjectMember{}
+	err := q.QueryRowContext(ctx, query, projectId, userId).Scan(
+		&projectMember.Id,
+		&projectMember.ProjectId,
+		&projectMember.UserId,
+		&projectMember.Role,
+		&projectMember.CreatedAt)
+
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return projectMember, nil
+}
+
+func (r *projectRepository) DeleteProjectByIdentifier(ctx context.Context, q database.Querier, identifier string, deletedAt time.Time) error {
+	query := `
+        UPDATE "project"
+        SET "deletedAt" = $2
+        WHERE "id" = $1 OR "slug" = $1;
+	`
+	_, err := q.ExecContext(ctx, query, identifier, deletedAt)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

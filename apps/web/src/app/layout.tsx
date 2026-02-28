@@ -37,7 +37,7 @@ export default function RootLayout({
             <Navbar />
             <div className="py-12">{children}</div>
           </main>
-          <Toaster />
+          <Toaster richColors />
           <Footer />
         </Providers>
       </body>

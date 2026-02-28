@@ -70,6 +70,54 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
+    patch:
+      tags:
+        - Projects
+      summary: Update project
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProjectRequest'
+      responses:
+        '204':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+    delete:
+      tags:
+        - Projects
+      summary: Delete project
+      responses:
+        '204':
+          description: successful operation
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
   /projects/{id|slug}/members:
     parameters:
       - $ref: '#/components/parameters/ProjectIdentifier'
@@ -216,7 +264,29 @@ components:
             type: string
             maxLength: 120
             description: Summary of the project
-
+      UpdateProjectRequest:
+        type: object
+        properties:
+          name:
+            type: string
+            minLength: 3
+            maxLength: 100
+            description:  Name of the project
+          slug:
+            type: string
+            minLength: 3
+            maxLength: 100
+            description: Slug of the project
+          summary:
+            type: string
+            maxLength: 120
+            description: Summary of the project
+          description:
+            type: string
+            description: Description of the project
+          iconUrl:
+            type: string
+            description: Icon url of the project
       ProblemDetails:
         type: object
         required:

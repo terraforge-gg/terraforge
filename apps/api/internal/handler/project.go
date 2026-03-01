@@ -4,6 +4,7 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
+	"strconv"
 
 	"github.com/labstack/echo/v5"
 	"github.com/terraforge-gg/terraforge/internal/config"
@@ -18,13 +19,15 @@ type ProjectHandler struct {
 	cfg            *config.Config
 	logger         *slog.Logger
 	projectService service.ProjectService
+	searchService  service.SearchService
 }
 
-func NewProjectHandler(cfg *config.Config, logger *slog.Logger, projectService service.ProjectService) *ProjectHandler {
+func NewProjectHandler(cfg *config.Config, logger *slog.Logger, projectService service.ProjectService, searchService service.SearchService) *ProjectHandler {
 	return &ProjectHandler{
 		cfg:            cfg,
 		logger:         logger,
 		projectService: projectService,
+		searchService:  searchService,
 	}
 }
 
@@ -229,4 +232,31 @@ func (h *ProjectHandler) DeleteProject(c *echo.Context) error {
 	}
 
 	return c.NoContent(http.StatusOK)
+}
+
+func (h *ProjectHandler) SearchProjects(c *echo.Context) error {
+	query := c.QueryParam("query")
+	projectType := c.QueryParamOr("type", string(models.ProjectTypeMod))
+	ctx := c.Request().Context()
+
+	limit, err := strconv.ParseInt(c.QueryParam("limit"), 10, 64)
+	if err != nil || limit < 1 {
+		limit = 10
+	}
+
+	offset, err := strconv.ParseInt(c.QueryParam("offset"), 10, 64)
+	if err != nil || offset < 0 {
+		offset = 0
+	}
+
+	const maxLimit int64 = 100
+	if limit > maxLimit {
+		limit = maxLimit
+	}
+
+	projects, totalHits := h.searchService.SearchProjects(ctx, query, projectType, limit, offset)
+
+	response := dto.ProjectToProjectSearchResponse(projects, totalHits, limit, offset)
+
+	return c.JSON(http.StatusOK, response)
 }

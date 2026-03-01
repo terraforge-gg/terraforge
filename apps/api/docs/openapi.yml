@@ -14,6 +14,49 @@ security:
 
 paths:
   /projects:
+    get:
+      summary: Search projects
+      parameters:
+        - name: query
+          schema:
+            type: string
+          in: query
+          required: false
+        - name: type
+          schema:
+            type: string
+          in: query
+          required: false
+        - name: limit
+          schema:
+            type: integer
+            format: int64
+            minimum: 0
+          in: query
+          required: false
+        - name: offset
+          schema:
+            type: integer
+            format: int64
+            minimum: 0
+            maximum: 100
+          in: query
+          required: false
+      tags:
+        - Projects
+      responses:
+        "201":
+          description: Project created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProjectSearch"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
     post:
       summary: Create a new project
       tags:
@@ -23,53 +66,53 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateProjectRequest'
+              $ref: "#/components/schemas/CreateProjectRequest"
       responses:
-        '201':
+        "201":
           description: Project created successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Project'
-        '400':
+                $ref: "#/components/schemas/Project"
+        "400":
           description: Bad request
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ProblemDetails'
-        '401':
+                $ref: "#/components/schemas/ProblemDetails"
+        "401":
           description: Unauthorized
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ProblemDetails'
+                $ref: "#/components/schemas/ProblemDetails"
   /projects/{id|slug}:
     parameters:
-      - $ref: '#/components/parameters/ProjectIdentifier'
+      - $ref: "#/components/parameters/ProjectIdentifier"
     get:
       tags:
         - Projects
       summary: Find project by id or slug
       security: []
       responses:
-        '200':
+        "200":
           description: successful operation
           content:
-              application/json:
-                schema:
-                  $ref: '#/components/schemas/Project'
-        '400':
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Project"
+        "400":
           description: Bad request
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ProblemDetails'
-        '404':
+                $ref: "#/components/schemas/ProblemDetails"
+        "404":
           description: Not found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ProblemDetails'
+                $ref: "#/components/schemas/ProblemDetails"
     patch:
       tags:
         - Projects
@@ -79,55 +122,55 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UpdateProjectRequest'
+              $ref: "#/components/schemas/UpdateProjectRequest"
       responses:
-        '204':
+        "204":
           description: successful operation
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Project'
-        '400':
+                $ref: "#/components/schemas/Project"
+        "400":
           description: Bad request
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ProblemDetails'
-        '404':
+                $ref: "#/components/schemas/ProblemDetails"
+        "404":
           description: Not found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ProblemDetails'
+                $ref: "#/components/schemas/ProblemDetails"
     delete:
       tags:
         - Projects
       summary: Delete project
       responses:
-        '204':
+        "204":
           description: successful operation
-        '400':
+        "400":
           description: Bad request
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ProblemDetails'
-        '404':
+                $ref: "#/components/schemas/ProblemDetails"
+        "404":
           description: Not found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ProblemDetails'
+                $ref: "#/components/schemas/ProblemDetails"
   /projects/{id|slug}/members:
     parameters:
-      - $ref: '#/components/parameters/ProjectIdentifier'
+      - $ref: "#/components/parameters/ProjectIdentifier"
     get:
       tags:
         - Projects
       summary: List project members
       security: []
       responses:
-        '200':
+        "200":
           description: successful operation
           content:
             application/json:
@@ -135,13 +178,13 @@ paths:
                 type: array
                 minItems: 0
                 items:
-                  $ref: '#/components/schemas/ProjectMember'
-        '404':
+                  $ref: "#/components/schemas/ProjectMember"
+        "404":
           description: Not found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ProblemDetails'
+                $ref: "#/components/schemas/ProblemDetails"
 
 components:
   parameters:
@@ -153,174 +196,194 @@ components:
       schema:
         type: string
   schemas:
-      Project:
-        type: object
-        required:
-          - id
-          - name
-          - slug
-          - downloads
-          - type
-          - status
-          - createdAt
-          - updatedAt
-        properties:
-          id:
-            type: string
-            description: Unique identifier of the project
-          name:
-            type: string
-            description: Name of the project
-          slug:
-            type: string
-            description: URL-friendly identifier
-          summary:
-            type: string
-            nullable: true
-            description: Short summary of the project
-          description:
-            type: string
-            nullable: true
-            description: Detailed description of the project
-          iconUrl:
-            type: string
-            format: uri
-            nullable: true
-            description: URL to the project's icon
-          downloads:
-            type: integer
-            format: int64
-            description: Number of downloads
-          type:
-            $ref: '#/components/schemas/ProjectType'
-          status:
-            $ref: '#/components/schemas/ProjectStatus'
-          createdAt:
-            type: string
-            format: date-time
-            description: Creation timestamp
-          updatedAt:
-            type: string
-            format: date-time
-            description: Last update timestamp
-          userId:
-            type: string
-            description: Identifier of the user
-      ProjectType:
-        type: string
-        enum:
-          - mod
-      ProjectStatus:
-        type: string
-        enum:
-          - draft
-          - rejected
-          - approved
-          - banned
-      ProjectMember:
-        type: object
-        required:
-          - username
-          - userId
-          - role
-        properties:
-          username:
-            type: string
-          userId: 
-            type: string
-          image:
-            type: string
-          role:
-            $ref: '#/components/schemas/ProjectMemberRole'
-      ProjectMemberRole:
-        type: string
-        enum:
-          - owner
-          - admin
-          - developer
-          - maintainer
-          - member
-
-      CreateProjectRequest:
-        type: object
-        required:
-          - type
-          - name
-          - slug
-        properties:
-          type:
-            $ref: '#/components/schemas/ProjectType'
-          name:
-            type: string
-            minLength: 3
-            maxLength: 100
-            description:  Name of the project
-          slug:
-            type: string
-            minLength: 3
-            maxLength: 100
-            description:  Slug of the project
-          summary:
-            type: string
-            maxLength: 120
-            description: Summary of the project
-      UpdateProjectRequest:
-        type: object
-        properties:
-          name:
-            type: string
-            minLength: 3
-            maxLength: 100
-            description:  Name of the project
-          slug:
-            type: string
-            minLength: 3
-            maxLength: 100
-            description: Slug of the project
-          summary:
-            type: string
-            maxLength: 120
-            description: Summary of the project
-          description:
-            type: string
-            description: Description of the project
-          iconUrl:
-            type: string
-            description: Icon url of the project
-      ProblemDetails:
-        type: object
-        required:
-          - title
-          - status
-          - detail
-        properties:
-          title:
-            type: string
-            description: A short, human-readable summary of the problem
-          status:
-            type: integer
-            format: int32
-            description: The HTTP status code
-          detail:
-            type: string
-            description: A human-readable explanation specific to this occurrence of the problem
-          errors:
-            type: array
-            description: List of validation errors (if applicable)
-            items:
-              $ref: '#/components/schemas/ValidationError'
-      ValidationError:
-        type: object
-        properties:
-          field:
-            type: string
-            description: Name of the field where the error occurred
-          code:
-            type: string
-            description: Machine-readable error code
-          message:
-            type: string
-            description: Human-readable error message
+    Project:
+      type: object
+      required:
+        - id
+        - name
+        - slug
+        - downloads
+        - type
+        - status
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+          description: Unique identifier of the project
+        name:
+          type: string
+          description: Name of the project
+        slug:
+          type: string
+          description: URL-friendly identifier
+        summary:
+          type: string
+          nullable: true
+          description: Short summary of the project
+        description:
+          type: string
+          nullable: true
+          description: Detailed description of the project
+        iconUrl:
+          type: string
+          format: uri
+          nullable: true
+          description: URL to the project's icon
+        downloads:
+          type: integer
+          format: int64
+          description: Number of downloads
+        type:
+          $ref: "#/components/schemas/ProjectType"
+        status:
+          $ref: "#/components/schemas/ProjectStatus"
+        createdAt:
+          type: string
+          format: date-time
+          description: Creation timestamp
+        updatedAt:
+          type: string
+          format: date-time
+          description: Last update timestamp
+        userId:
+          type: string
+          description: Identifier of the user
+    ProjectType:
+      type: string
+      enum:
+        - mod
+    ProjectStatus:
+      type: string
+      enum:
+        - draft
+        - rejected
+        - approved
+        - banned
+    ProjectMember:
+      type: object
+      required:
+        - username
+        - userId
+        - role
+      properties:
+        username:
+          type: string
+        userId:
+          type: string
+        image:
+          type: string
+        role:
+          $ref: "#/components/schemas/ProjectMemberRole"
+    ProjectMemberRole:
+      type: string
+      enum:
+        - owner
+        - admin
+        - developer
+        - maintainer
+        - member
+    ProjectSearch:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Project"
+        limit:
+          type: integer
+          format: int64
+        offset:
+          type: integer
+          format: int64
+        totalHits:
+          type: integer
+          format: int64
+      required:
+        - data
+        - limit
+        - offset
+        - totalHits
+    CreateProjectRequest:
+      type: object
+      required:
+        - type
+        - name
+        - slug
+      properties:
+        type:
+          $ref: "#/components/schemas/ProjectType"
+        name:
+          type: string
+          minLength: 3
+          maxLength: 100
+          description: Name of the project
+        slug:
+          type: string
+          minLength: 3
+          maxLength: 100
+          description: Slug of the project
+        summary:
+          type: string
+          maxLength: 120
+          description: Summary of the project
+    UpdateProjectRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 3
+          maxLength: 100
+          description: Name of the project
+        slug:
+          type: string
+          minLength: 3
+          maxLength: 100
+          description: Slug of the project
+        summary:
+          type: string
+          maxLength: 120
+          description: Summary of the project
+        description:
+          type: string
+          description: Description of the project
+        iconUrl:
+          type: string
+          description: Icon url of the project
+    ProblemDetails:
+      type: object
+      required:
+        - title
+        - status
+        - detail
+      properties:
+        title:
+          type: string
+          description: A short, human-readable summary of the problem
+        status:
+          type: integer
+          format: int32
+          description: The HTTP status code
+        detail:
+          type: string
+          description: A human-readable explanation specific to this occurrence of the problem
+        errors:
+          type: array
+          description: List of validation errors (if applicable)
+          items:
+            $ref: "#/components/schemas/ValidationError"
+    ValidationError:
+      type: object
+      properties:
+        field:
+          type: string
+          description: Name of the field where the error occurred
+        code:
+          type: string
+          description: Machine-readable error code
+        message:
+          type: string
+          description: Human-readable error message
   securitySchemes:
     bearerAuth:
       type: http

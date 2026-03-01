@@ -1,8 +1,14 @@
 import { cache } from "react";
 import { client } from "./client";
 import type { CreateProjectSchema } from "./models/project/create";
-import type { Project, ProjectIdentifier, ProjectMember } from "./types";
+import type {
+  Project,
+  ProjectIdentifier,
+  ProjectMember,
+  ProjectSearch,
+} from "./types";
 import { UpdateProjectParams } from "./models/project/update";
+import { SearchProjectParams } from "./models/project/search";
 
 const apiService = {
   project: {
@@ -88,6 +94,21 @@ const apiService = {
       if (error) {
         throw new Error(error.detail);
       }
+    },
+    search: async (params?: SearchProjectParams): Promise<ProjectSearch> => {
+      const { data, error } = await client.GET("/projects", {
+        params: {
+          query: {
+            ...params,
+          },
+        },
+      });
+
+      if (error) {
+        throw new Error(error.detail);
+      }
+
+      return data;
     },
   },
 };

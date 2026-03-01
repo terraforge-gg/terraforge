@@ -16,6 +16,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import ProjectDataProvider from "@/components/project/project-data-provider";
 import getServerSession from "@/lib/auth";
+import { PROJECT_MEMBER_ROLE } from "@/lib/api/types";
 
 const ModLayout = async ({
   children,
@@ -34,6 +35,8 @@ const ModLayout = async ({
   }
 
   const role = members?.find((x) => x.userId === session?.user.id)?.role;
+  const canViewSettings =
+    role === PROJECT_MEMBER_ROLE.OWNER || role === PROJECT_MEMBER_ROLE.ADMIN;
 
   return (
     <ProjectDataProvider project={mod} members={members}>
@@ -43,10 +46,7 @@ const ModLayout = async ({
         iconUrl={mod.iconUrl}
         downloads={mod.downloads}
       />
-      <ProjectNavbar
-        slug={mod.slug}
-        showSettings={role === "owner" || role === "admin"}
-      />
+      <ProjectNavbar slug={mod.slug} showSettings={canViewSettings} />
       <div className="flex flex-col gap-4 md:flex-row">
         <div className="w-full min-h-96">{children}</div>
         <div className="flex flex-col w-full md:w-auto gap-4 md:ml-auto">

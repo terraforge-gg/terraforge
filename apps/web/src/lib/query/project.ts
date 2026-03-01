@@ -1,7 +1,8 @@
 import { queryOptions } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import apiService from "@/lib/api/service";
-import type { Project, ProjectMember } from "../api/types";
+import type { Project, ProjectMember, ProjectSearch } from "../api/types";
+import { SearchProjectParams } from "../api/models/project/search";
 
 export const projectQueryOptions = (
   identifier: string,
@@ -34,3 +35,17 @@ export const projectMembersQueryOptions = (
     queryFn: () => apiService.project.members(identifier),
     refetchOnWindowFocus: false,
   });
+
+export const projectSearchQueryOptions = (
+  params?: SearchProjectParams,
+  options?: Omit<
+    UseQueryOptions<ProjectSearch, Error, ProjectSearch>,
+    "queryKey" | "queryFn"
+  >,
+) => {
+  return queryOptions({
+    ...options,
+    queryKey: ["project-search", params],
+    queryFn: () => apiService.project.search(params),
+  });
+};

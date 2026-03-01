@@ -11,7 +11,41 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** Search projects */
+        get: {
+            parameters: {
+                query?: {
+                    query?: string;
+                    type?: string;
+                    limit?: number;
+                    offset?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Project created successfully */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProjectSearch"];
+                    };
+                };
+                /** @description Bad request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
         put?: never;
         /** Create a new project */
         post: {
@@ -309,6 +343,15 @@ export interface components {
         };
         /** @enum {string} */
         ProjectMemberRole: "owner" | "admin" | "developer" | "maintainer" | "member";
+        ProjectSearch: {
+            data: components["schemas"]["Project"][];
+            /** Format: int64 */
+            limit: number;
+            /** Format: int64 */
+            offset: number;
+            /** Format: int64 */
+            totalHits: number;
+        };
         CreateProjectRequest: {
             type: components["schemas"]["ProjectType"];
             /** @description Name of the project */

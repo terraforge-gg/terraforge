@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import UpdateProjectForm from "@/components/project/update-project-form";
 import { useSession } from "@/lib/auth-client";
 import { Spinner } from "@/components/ui/spinner";
+import { PROJECT_MEMBER_ROLE } from "@/lib/api/types";
 
 const ModSettingsPage = () => {
   const { project: mod, members } = useProjectData();
@@ -29,6 +30,7 @@ const ModSettingsPage = () => {
     mutationFn: apiService.project.delete,
     onSuccess: () => {
       toast.success("Project deleted");
+      router.refresh();
       router.push("/");
     },
     onError: (error) => {
@@ -41,7 +43,8 @@ const ModSettingsPage = () => {
   }
 
   const role = members?.find((x) => x.userId === session?.user.id)?.role;
-  const canDelete = role === "owner" || role === "admin";
+  const canDelete =
+    role === PROJECT_MEMBER_ROLE.OWNER || role === PROJECT_MEMBER_ROLE.ADMIN;
 
   return (
     <div className="flex flex-col gap-4">

@@ -26,10 +26,11 @@ type projectService struct {
 	logger      *slog.Logger
 	db          *sql.DB
 	projectRepo repository.ProjectRepository
+	searchRepo  repository.SearchRepository
 }
 
-func NewProjectService(logger *slog.Logger, db *sql.DB, projectRepo repository.ProjectRepository) ProjectService {
-	return &projectService{logger: logger, db: db, projectRepo: projectRepo}
+func NewProjectService(logger *slog.Logger, db *sql.DB, projectRepo repository.ProjectRepository, searchRepo repository.SearchRepository) ProjectService {
+	return &projectService{logger: logger, db: db, projectRepo: projectRepo, searchRepo: searchRepo}
 }
 
 type CreateUserProjectParams struct {
@@ -89,6 +90,13 @@ func (s *projectService) CreateUserProject(ctx context.Context, params CreateUse
 	if err != nil {
 		panic(err)
 	}
+
+	go func() {
+		err = s.searchRepo.IndexProject(context.Background(), project)
+		if err != nil {
+			s.logger.Error("Failed to index project.", "Project: ", project, "Error: ", err)
+		}
+	}()
 
 	return project, nil
 }
@@ -217,6 +225,13 @@ func (s *projectService) UpdateProject(ctx context.Context, params UpdateProject
 		panic(err)
 	}
 
+	go func() {
+		err = s.searchRepo.UpdateProject(context.Background(), project)
+		if err != nil {
+			s.logger.Error("Failed to update project document.", "Project: ", project, "Error: ", err)
+		}
+	}()
+
 	return project, nil
 }
 
@@ -265,6 +280,13 @@ func (s *projectService) DeleteProject(ctx context.Context, params DeleteProject
 	if err != nil {
 		panic(err)
 	}
+
+	go func() {
+		err = s.searchRepo.DeleteProject(context.Background(), project.Id)
+		if err != nil {
+			s.logger.Error("Failed to delete project document.", "Project: ", project, "Error: ", err)
+		}
+	}()
 
 	return nil
 }

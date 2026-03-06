@@ -14,6 +14,7 @@ type Config struct {
 	DatabaseUrl          string
 	MeiliSearchHostUrl   string
 	MeiliSearchMasterKey string
+	SeedDb               bool
 }
 
 func Load() *Config {
@@ -27,5 +28,6 @@ func Load() *Config {
 		DatabaseUrl:          os.Getenv("DATABASE_URL"),
 		MeiliSearchHostUrl:   os.Getenv("MEILISEARCH_HOST_URL"),
 		MeiliSearchMasterKey: os.Getenv("MEILISEARCH_MASTER_KEY"),
+		SeedDb:               os.Getenv("SEED_DB") == "true",
 	}
 }

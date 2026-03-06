@@ -22,7 +22,6 @@ import (
 )
 
 func NewServer(cfg *config.Config, logger *slog.Logger, db *sql.DB) (*echo.Echo, error) {
-
 	jwtValidator, err := auth.NewValidator(cfg.AuthUrl + "/api/auth/jwks")
 	authMiddleware := custom_middleware.JWTMiddleware(jwtValidator)
 	authOptionalMiddleware := custom_middleware.OptionalJWTMiddleware(jwtValidator)
@@ -37,9 +36,17 @@ func NewServer(cfg *config.Config, logger *slog.Logger, db *sql.DB) (*echo.Echo,
 
 	authService := service.NewAuthService(logger, cfg.AuthUrl)
 
+	loaderVersionRepo := repository.NewLoaderVersionRepository()
+	loaderVersionService := service.NewLoaderVersionService(logger, db, loaderVersionRepo)
+	loaderVersionHandler := handler.NewLoaderVersionHandler(cfg, logger, loaderVersionService)
+
 	projectRepo := repository.NewProjectRepository()
 	projectService := service.NewProjectService(logger, db, projectRepo, meiliSearchRepo)
 	projectHandler := handler.NewProjectHandler(cfg, logger, projectService, searchService)
+
+	if cfg.SeedDb {
+		service.SeedLoaderVersions(logger, loaderVersionService)
+	}
 
 	validate := validator.New()
 	validate.RegisterValidation("url_slug", validation.ValidateUrlSlug)
@@ -97,6 +104,10 @@ func NewServer(cfg *config.Config, logger *slog.Logger, db *sql.DB) (*echo.Echo,
 
 	v1 := e.Group("/v1")
 	v1.File("/openapi.yml", "./docs/openapi.yml")
+
+	v1.GET("/loader-versions/:id", loaderVersionHandler.GetLoaderVersionById)
+	v1.GET("/loader-versions", loaderVersionHandler.GetLoaderVersions)
+
 	v1.POST("/projects", projectHandler.CreateProject, authMiddleware)
 	v1.GET("/projects", projectHandler.SearchProjects)
 	v1.GET("/projects/:identifier", projectHandler.GetProjectByIdentifier, authOptionalMiddleware)

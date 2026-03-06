@@ -185,6 +185,28 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ProblemDetails"
+  /loader-versions:
+    get:
+      tags:
+        - Loader versions
+      summary: List of loader versions
+      security: []
+      responses:
+        '200':
+          description: successful operation
+          content:
+              application/json:
+                schema:
+                  type: array
+                  minItems: 0
+                  items:
+                    $ref: '#/components/schemas/LoaderVersion'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
 
 components:
   parameters:
@@ -304,6 +326,32 @@ components:
         - limit
         - offset
         - totalHits
+    LoaderVersionStatus:
+      type: string
+      enum:
+        - stable
+        - preview
+    LoaderVersion:
+      type: object
+      properties:
+        id:
+          type: string
+        version:
+          type: string
+        status:
+          $ref: '#/components/schemas/LoaderVersionStatus'
+        isLegacy:
+          type: boolean
+        releasedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - version
+        - status
+        - isLegacy
+        - releasedAt
+
     CreateProjectRequest:
       type: object
       required:

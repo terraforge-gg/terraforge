@@ -15,6 +15,12 @@ type Config struct {
 	MeiliSearchHostUrl   string
 	MeiliSearchMasterKey string
 	SeedDb               bool
+	AwsRegion            string
+	AwsAccessKeyId       string
+	AwsSecretAccessKey   string
+	AwsSessionToken      string
+	CdnUrl               string
+	S3AssetsBucketName   string
 }
 
 func Load() *Config {
@@ -29,5 +35,11 @@ func Load() *Config {
 		MeiliSearchHostUrl:   os.Getenv("MEILISEARCH_HOST_URL"),
 		MeiliSearchMasterKey: os.Getenv("MEILISEARCH_MASTER_KEY"),
 		SeedDb:               os.Getenv("SEED_DB") == "true",
+		AwsRegion:            os.Getenv("AWS_REGION"),
+		AwsAccessKeyId:       os.Getenv("AWS_ACCESS_KEY_ID"),
+		AwsSecretAccessKey:   os.Getenv("AWS_SECRET_ACCESS_KEY"),
+		AwsSessionToken:      os.Getenv("AWS_SESSION_TOKEN"),
+		CdnUrl:               os.Getenv("CDN_URL"),
+		S3AssetsBucketName:   os.Getenv("S3_ASSETS_BUCKET_NAME"),
 	}
 }

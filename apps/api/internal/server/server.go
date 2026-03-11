@@ -3,6 +3,7 @@ package server
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"log/slog"
 	"net/http"
 	"time"
@@ -14,6 +15,7 @@ import (
 	"github.com/terraforge-gg/terraforge/internal/auth"
 	"github.com/terraforge-gg/terraforge/internal/config"
 	"github.com/terraforge-gg/terraforge/internal/handler"
+	"github.com/terraforge-gg/terraforge/internal/lib/aws"
 	"github.com/terraforge-gg/terraforge/internal/lib/meilisearch"
 	custom_middleware "github.com/terraforge-gg/terraforge/internal/middleware"
 	"github.com/terraforge-gg/terraforge/internal/repository"
@@ -30,6 +32,15 @@ func NewServer(cfg *config.Config, logger *slog.Logger, db *sql.DB) (*echo.Echo,
 		return nil, fmt.Errorf("failed to create JWKS validator: %w", err)
 	}
 
+	aws_config, err := aws.NewAwsConfig(cfg)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	s3_client := aws.NewS3Client(cfg, aws_config)
+	objectStoreService := service.NewObjectStoreService(s3_client, cfg.S3AssetsBucketName)
+
 	meiliClient := meilisearch.NewMeiliSearch(cfg.MeiliSearchHostUrl, cfg.MeiliSearchMasterKey)
 	meiliSearchRepo := repository.NewMeiliSearchRepository(logger, meiliClient)
 	searchService := service.NewSearchService(logger, meiliSearchRepo)
@@ -43,6 +54,10 @@ func NewServer(cfg *config.Config, logger *slog.Logger, db *sql.DB) (*echo.Echo,
 	projectRepo := repository.NewProjectRepository()
 	projectService := service.NewProjectService(logger, db, projectRepo, meiliSearchRepo)
 	projectHandler := handler.NewProjectHandler(cfg, logger, projectService, searchService)
+
+	projectReleasenRepo := repository.NewProjectReleaseRepository()
+	projectReleaseService := service.NewProjectReleaseService(logger, cfg.CdnUrl, db, projectRepo, projectReleasenRepo, loaderVersionRepo, objectStoreService)
+	projectReleaseHandler := handler.NewHandler(cfg, logger, projectReleaseService)
 
 	if cfg.SeedDb {
 		service.SeedLoaderVersions(logger, loaderVersionService)
@@ -114,6 +129,10 @@ func NewServer(cfg *config.Config, logger *slog.Logger, db *sql.DB) (*echo.Echo,
 	v1.GET("/projects/:identifier/members", projectHandler.GetProjectMembers, authOptionalMiddleware)
 	v1.PATCH("/projects/:identifier", projectHandler.UpdateProject, authMiddleware)
 	v1.DELETE("/projects/:identifier", projectHandler.DeleteProject, authMiddleware)
+
+	v1.GET("/projects/:identifier/releases", projectReleaseHandler.GetReleases)
+	v1.POST("/projects/:identifier/releases", projectReleaseHandler.CreateRelease, authMiddleware)
+	v1.GET("/projects/:identifier/releases/upload-url", projectReleaseHandler.GeneratePresignedPutUrl, authMiddleware)
 
 	return e, nil
 }

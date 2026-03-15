@@ -20,8 +20,9 @@ var loaderVersions = []service.CreateLoaderVersionParams{
 
 func SeedLoaderVersions(logger *slog.Logger, loaderVersionService service.LoaderVersionService) error {
 	ctx := context.Background()
+
 	for _, lv := range loaderVersions {
-		_, err := loaderVersionService.GetLoaderVersionByLabel(ctx, lv.GameVersion)
+		_, err := loaderVersionService.GetLoaderVersionByLabel(ctx, lv.VersionLabel)
 		if err == nil {
 			logger.Info("loader version already exists, skipping", "game version", lv.GameVersion, "version label", lv.VersionLabel)
 			continue

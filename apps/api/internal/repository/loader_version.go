@@ -10,8 +10,8 @@ import (
 
 type LoaderVersionRepository interface {
 	FindLoaderVersionById(ctx context.Context, q database.Querier, id string) (*models.LoaderVersion, error)
-	FindLoaderVersionByGameVersion(ctx context.Context, q database.Querier, id string) (*models.LoaderVersion, error)
-	FindLoaderVersionByLabel(ctx context.Context, q database.Querier, id string) (*models.LoaderVersion, error)
+	FindLoaderVersionByGameVersion(ctx context.Context, q database.Querier, gameVersion string) (*models.LoaderVersion, error)
+	FindLoaderVersionByLabel(ctx context.Context, q database.Querier, label string) (*models.LoaderVersion, error)
 	FindLoaderVersions(ctx context.Context, q database.Querier) ([]models.LoaderVersion, error)
 	InsertLoaderVersion(ctx context.Context, q database.Querier, loaderVersion *models.LoaderVersion) error
 }
@@ -56,7 +56,7 @@ func (r *loaderVersionRepository) FindLoaderVersionById(ctx context.Context, q d
 	return lv, nil
 }
 
-func (r *loaderVersionRepository) FindLoaderVersionByGameVersion(ctx context.Context, q database.Querier, id string) (*models.LoaderVersion, error) {
+func (r *loaderVersionRepository) FindLoaderVersionByGameVersion(ctx context.Context, q database.Querier, gameVersion string) (*models.LoaderVersion, error) {
 	query := `
 		SELECT 
 			"id",
@@ -71,7 +71,7 @@ func (r *loaderVersionRepository) FindLoaderVersionByGameVersion(ctx context.Con
 
 	lv := &models.LoaderVersion{}
 
-	err := q.QueryRow(query, id).Scan(
+	err := q.QueryRow(query, gameVersion).Scan(
 		&lv.Id,
 		&lv.GameVersion,
 		&lv.VersionLabel,
@@ -90,7 +90,7 @@ func (r *loaderVersionRepository) FindLoaderVersionByGameVersion(ctx context.Con
 	return lv, nil
 }
 
-func (r *loaderVersionRepository) FindLoaderVersionByLabel(ctx context.Context, q database.Querier, id string) (*models.LoaderVersion, error) {
+func (r *loaderVersionRepository) FindLoaderVersionByLabel(ctx context.Context, q database.Querier, label string) (*models.LoaderVersion, error) {
 	query := `
 		SELECT 
 			"id",
@@ -105,7 +105,7 @@ func (r *loaderVersionRepository) FindLoaderVersionByLabel(ctx context.Context, 
 
 	lv := &models.LoaderVersion{}
 
-	err := q.QueryRow(query, id).Scan(
+	err := q.QueryRow(query, label).Scan(
 		&lv.Id,
 		&lv.GameVersion,
 		&lv.VersionLabel,

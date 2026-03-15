@@ -14,7 +14,7 @@ import (
 var loaderVersions = []service.CreateLoaderVersionParams{
 	{Id: utils.NewUUID(), GameVersion: "1.3.5", VersionLabel: "0.11.8.10", BuildType: string(models.LoaderVersionStatusLegacy), ReleasedAt: time.Now(), UpdatedAt: time.Now()},
 	{Id: utils.NewUUID(), GameVersion: "1.4.3", VersionLabel: "2022.09.47.88", BuildType: string(models.LoaderVersionStatusLegacy), ReleasedAt: time.Now(), UpdatedAt: time.Now()},
-	{Id: utils.NewUUID(), GameVersion: "1.4.4", VersionLabel: "2026.02.2.3", BuildType: string(models.LoaderVersionStatusStable), ReleasedAt: time.Now(), UpdatedAt: time.Now()},
+	{Id: utils.NewUUID(), GameVersion: "1.4.4", VersionLabel: "2026.02.2.3", BuildType: string(models.LoaderVersionStatusPreview), ReleasedAt: time.Now(), UpdatedAt: time.Now()},
 	{Id: utils.NewUUID(), GameVersion: "1.4.4", VersionLabel: "2026.01.3.2", BuildType: string(models.LoaderVersionStatusStable), ReleasedAt: time.Now(), UpdatedAt: time.Now()},
 }
 

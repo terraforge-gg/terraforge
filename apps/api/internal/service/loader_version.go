@@ -14,6 +14,7 @@ import (
 type LoaderVersionService interface {
 	GetLoaderVersionById(ctx context.Context, id string) (*models.LoaderVersion, error)
 	GetLoaderVersionByGameVersion(ctx context.Context, id string) (*models.LoaderVersion, error)
+	GetLoaderVersionByLabel(ctx context.Context, id string) (*models.LoaderVersion, error)
 	GetLoaderVersions(ctx context.Context) ([]models.LoaderVersion, error)
 	CreateLoaderVersion(ctx context.Context, params CreateLoaderVersionParams) error
 }
@@ -44,6 +45,20 @@ func (s *loaderVersionService) GetLoaderVersionById(ctx context.Context, id stri
 
 func (s *loaderVersionService) GetLoaderVersionByGameVersion(ctx context.Context, gameVersion string) (*models.LoaderVersion, error) {
 	loaderVersion, err := s.loaderVersionRepo.FindLoaderVersionByGameVersion(ctx, s.db, gameVersion)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if loaderVersion == nil {
+		return nil, errors.ErrLoaderVersionNotFound
+	}
+
+	return loaderVersion, nil
+}
+
+func (s *loaderVersionService) GetLoaderVersionByLabel(ctx context.Context, gameVersion string) (*models.LoaderVersion, error) {
+	loaderVersion, err := s.loaderVersionRepo.FindLoaderVersionByLabel(ctx, s.db, gameVersion)
 
 	if err != nil {
 		return nil, err

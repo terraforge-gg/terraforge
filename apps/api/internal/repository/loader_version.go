@@ -11,6 +11,7 @@ import (
 type LoaderVersionRepository interface {
 	FindLoaderVersionById(ctx context.Context, q database.Querier, id string) (*models.LoaderVersion, error)
 	FindLoaderVersionByGameVersion(ctx context.Context, q database.Querier, id string) (*models.LoaderVersion, error)
+	FindLoaderVersionByLabel(ctx context.Context, q database.Querier, id string) (*models.LoaderVersion, error)
 	FindLoaderVersions(ctx context.Context, q database.Querier) ([]models.LoaderVersion, error)
 	InsertLoaderVersion(ctx context.Context, q database.Querier, loaderVersion *models.LoaderVersion) error
 }
@@ -66,6 +67,40 @@ func (r *loaderVersionRepository) FindLoaderVersionByGameVersion(ctx context.Con
 			"updatedAt"
 		FROM "loader_version" 
 		WHERE "gameVersion" = $1;
+	`
+
+	lv := &models.LoaderVersion{}
+
+	err := q.QueryRow(query, id).Scan(
+		&lv.Id,
+		&lv.GameVersion,
+		&lv.VersionLabel,
+		&lv.BuildType,
+		&lv.ReleasedAt,
+		&lv.UpdatedAt)
+
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return lv, nil
+}
+
+func (r *loaderVersionRepository) FindLoaderVersionByLabel(ctx context.Context, q database.Querier, id string) (*models.LoaderVersion, error) {
+	query := `
+		SELECT 
+			"id",
+			"gameVersion",
+			"versionLabel",
+			"buildType",
+			"releasedAt",
+			"updatedAt"
+		FROM "loader_version" 
+		WHERE "versionLabel" = $1;
 	`
 
 	lv := &models.LoaderVersion{}

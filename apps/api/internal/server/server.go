@@ -8,12 +8,12 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/alexliesenfeld/health"
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v5"
 	"github.com/labstack/echo/v5/middleware"
 	"github.com/terraforge-gg/terraforge/internal/auth"
 	"github.com/terraforge-gg/terraforge/internal/config"
-	"github.com/terraforge-gg/terraforge/internal/dto"
 	"github.com/terraforge-gg/terraforge/internal/handler"
 	"github.com/terraforge-gg/terraforge/internal/lib/aws"
 	"github.com/terraforge-gg/terraforge/internal/lib/meilisearch"
@@ -21,7 +21,6 @@ import (
 	"github.com/terraforge-gg/terraforge/internal/repository"
 	"github.com/terraforge-gg/terraforge/internal/seed"
 	"github.com/terraforge-gg/terraforge/internal/service"
-	"github.com/terraforge-gg/terraforge/internal/utils"
 	"github.com/terraforge-gg/terraforge/internal/validation"
 )
 
@@ -47,6 +46,8 @@ func NewServer(cfg *config.Config, logger *slog.Logger, db *sql.DB) (*echo.Echo,
 	meiliSearchRepo := repository.NewMeiliSearchRepository(logger, meiliClient)
 	searchService := service.NewSearchService(logger, meiliSearchRepo)
 
+	authHealthCheckService := auth.NewAuthHealthCheckService(logger, cfg.AuthUrl)
+
 	loaderVersionRepo := repository.NewLoaderVersionRepository()
 	loaderVersionService := service.NewLoaderVersionService(logger, db, loaderVersionRepo)
 	loaderVersionHandler := handler.NewLoaderVersionHandler(cfg, logger, loaderVersionService)
@@ -68,6 +69,26 @@ func NewServer(cfg *config.Config, logger *slog.Logger, db *sql.DB) (*echo.Echo,
 	validate.RegisterValidation("project_type", validation.ValidateProjectType)
 	validate.RegisterValidation("project_version_dependency_type", validation.ValidateProjectDependencyType)
 	validate.RegisterValidation("file_url", validation.ValidateFileUrl)
+
+	checker := health.NewChecker(
+		health.WithCacheDuration(1*time.Second),
+		health.WithTimeout(10*time.Second),
+		health.WithCheck(health.Check{
+			Name:    "database",
+			Timeout: 2 * time.Second,
+			Check:   db.PingContext,
+		}),
+		health.WithCheck(health.Check{
+			Name:    "search",
+			Timeout: 2 * time.Second,
+			Check:   meiliClient.Health,
+		}),
+		health.WithCheck(health.Check{
+			Name:    "auth",
+			Timeout: 2 * time.Second,
+			Check:   authHealthCheckService.Health,
+		}),
+	)
 
 	e := echo.New()
 
@@ -98,29 +119,7 @@ func NewServer(cfg *config.Config, logger *slog.Logger, db *sql.DB) (*echo.Echo,
 		})
 	})
 
-	e.GET("/debug/protected", func(c *echo.Context) error {
-		userId, ok := utils.GetUserId(c)
-
-		if !ok {
-			return c.JSON(http.StatusUnauthorized, dto.ProblemDetails{
-				Title:  "Unauthorized",
-				Status: http.StatusUnauthorized,
-				Detail: "Unauthorized",
-			})
-		}
-
-		return c.String(http.StatusOK, "Hello "+userId)
-	}, authMiddleware)
-
-	e.GET("/debug/protected-optional", func(c *echo.Context) error {
-		userId, ok := utils.GetUserId(c)
-
-		if !ok {
-			userId = "NONE"
-		}
-
-		return c.String(http.StatusOK, "Hello "+userId)
-	}, authOptionalMiddleware)
+	e.GET("/ready", echo.WrapHandler(health.NewHandler(checker)))
 
 	v1 := e.Group("/v1")
 	v1.File("/openapi.yml", "./docs/openapi.yml")

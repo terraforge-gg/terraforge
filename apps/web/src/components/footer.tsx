@@ -3,19 +3,19 @@ import { buttonVariants } from "@/components/ui/button";
 
 const Footer = () => {
   return (
-    <footer className="bg-muted h-41 flex items-center justify-between">
-      <div className="text-muted-foreground w-full px-1 text-center text-xs leading-loose sm:text-sm">
+    <footer className="flex h-24 items-center border-t">
+      <div className="flex w-full justify-center gap-4 px-1 text-center text-xs leading-loose text-muted-foreground sm:text-sm">
         <a
           href="https://github.com/terraforge-gg/terraforge"
           className={cn(buttonVariants({ variant: "ghost" }))}
         >
-          GitHub
+          github
         </a>
         <a
           href="https://status.terraforge.gg"
           className={cn(buttonVariants({ variant: "ghost" }))}
         >
-          Status
+          status
         </a>
       </div>
     </footer>

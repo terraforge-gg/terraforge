@@ -207,7 +207,97 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ProblemDetails'
-
+  /projects/{id|slug}/releases/upload-url:
+    parameters:
+      - $ref: '#/components/parameters/ProjectIdentifier'
+    get:
+      tags:
+        - Projects
+      summary: Generate a presigned put url
+      parameters:
+        - name: fileSize
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: successful operation
+          content:
+              application/json:
+                schema:
+                  type: string
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '401':
+          description: Unauthorised
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+  /projects/{id|slug}/releases:
+    parameters:
+      - $ref: '#/components/parameters/ProjectIdentifier'
+    get:
+      tags:
+        - Projects
+      summary: Get project releases
+      responses:
+        '200':
+          description: successful operation
+          content:
+              application/json:
+                schema:
+                  type: array
+                  minItems: 0
+                  items:
+                    $ref: '#/components/schemas/ProjectRelease'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+    post:
+      tags:
+        - Projects
+      summary: Create project release
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProjectReleaseRequest'
+      responses:
+        '201':
+          description: Project release created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectRelease'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
 components:
   parameters:
     ProjectIdentifier:
@@ -326,32 +416,150 @@ components:
         - limit
         - offset
         - totalHits
-    LoaderVersionStatus:
+    LoaderVersionBuildType:
       type: string
       enum:
         - stable
         - preview
+        - legacy
     LoaderVersion:
       type: object
       properties:
         id:
           type: string
-        version:
+        gameVersion:
           type: string
-        status:
-          $ref: '#/components/schemas/LoaderVersionStatus'
-        isLegacy:
-          type: boolean
+        versionLabel:
+          type: string
+        buildType:
+          $ref: '#/components/schemas/LoaderVersionBuildType'
         releasedAt:
+          type: string
+          format: date-time
+        updatedAt:
           type: string
           format: date-time
       required:
         - id
-        - version
-        - status
-        - isLegacy
+        - gameVersion
+        - versionLabel
+        - buildType
         - releasedAt
+        - updatedAt
+    ProjectRelease:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Version id
+        projectId:
+          type: string
+          description: Project id
+        name:
+          type: string
+          description: Version name
+        changelog:
+          type: string
+          description: Version changelog
+        versionNumber:
+          type: string
+        loaderVersion:
+          $ref: '#/components/schemas/LoaderVersion'
+        downloads:
+          type: integer
+          format: int64
+        fileUrl:
+          type: string
+        fileSize:
+          type: integer
+          format: int64
+        fileHash:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        publishedAt:
+          type: string
+          format: date-time
+        dependencies:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProjectReleaseDependency'
+      required:
+        - id
+        - projectId
+        - name
+        - versionNumber
+        - loaderVersion
+        - downloads
+        - fileUrl
+        - fileSize
+        - fileHash
+        - createdAt
+        - updatedAt
+        - dependencies
+    ProjectReleaseDependency:
+      type: object
+      properties:
+        id:
+          type: string
+          description: id
+        releaseId:
+          type: string
+        dependencyProjectId:
+          type: string
+        dependencyType:
+          $ref: '#/components/schemas/ProjectReleaseDependencyType'
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - releaseId
+        - dependencyProjectId
+        - dependencyType
+        - createdAt
+    ProjectReleaseDependencyType:
+      type: string
+      enum:
+        - required
+        - optional
 
+    CreateProjectReleaseDependencyRequest:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/ProjectReleaseDependencyType'
+        projectId:
+          type: string
+        minVersionNumber:
+          type: string
+      required:
+        - type
+        - projectId
+    CreateProjectReleaseRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        versionNumber:
+          type: string
+        loaderVersionId:
+          type: string
+        fileUrl:
+          type: string
+        dependencies:
+          type: array
+          items:
+            $ref: '#/components/schemas/CreateProjectReleaseDependencyRequest'
+      required:
+        - name
+        - versionNumber
+        - loaderVersionId
+        - fileUrl
     CreateProjectRequest:
       type: object
       required:
@@ -432,6 +640,7 @@ components:
         message:
           type: string
           description: Human-readable error message
+  
   securitySchemes:
     bearerAuth:
       type: http

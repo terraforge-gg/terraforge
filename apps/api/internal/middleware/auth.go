@@ -26,7 +26,7 @@ func JWTMiddleware(v *auth.Validator) echo.MiddlewareFunc {
 				return c.JSON(http.StatusUnauthorized, dto.ProblemDetails{
 					Title:  "Unauthorized",
 					Status: http.StatusUnauthorized,
-					Detail: "Invalid authorization header format.",
+					Detail: "Invalid authorization header format or missing token.",
 				})
 			}
 

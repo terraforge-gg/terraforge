@@ -1,21 +1,20 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Inter } from "next/font/google";
+import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import Navbar from "@/components/navbar";
+import { cn } from "@/lib/utils";
 import Footer from "@/components/footer";
-import { Toaster } from "@/components/ui/sonner";
+import Navbar from "@/components/navbar";
 import Providers from "@/components/providers/providers";
+import { Toaster } from "@/components/ui/sonner";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const fontSans = Geist({
   subsets: ["latin"],
+  variable: "--font-sans",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const fontMono = Geist_Mono({
   subsets: ["latin"],
+  variable: "--font-mono",
 });
 
 export const metadata: Metadata = {
@@ -28,13 +27,20 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={inter.variable} suppressHydrationWarning>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className={cn(
+        "antialiased",
+        fontMono.variable,
+        "font-sans",
+        fontSans.variable,
+      )}
+    >
+      <body>
         <Providers>
-          <main className="container mx-auto max-w-7xl px-4 min-h-screen">
-            <Navbar />
+          <Navbar />
+          <main className="container mx-auto min-h-screen max-w-6xl px-4">
             <div className="py-12">{children}</div>
           </main>
           <Toaster richColors />

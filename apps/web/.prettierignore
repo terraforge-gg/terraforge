@@ -1,4 +1,5 @@
+node_modules
+.next
 package-lock.json
 pnpm-lock.yaml
-.next/
 src/lib/api/schema.d.ts

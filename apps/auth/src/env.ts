@@ -6,9 +6,7 @@ dotenv.config();
 
 export const env = createEnv({
   server: {
-    NODE_ENV: z
-      .enum(["development", "production"])
-      .default("development"),
+    NODE_ENV: z.enum(["development", "production"]).default("development"),
     APP_ENV: z.string(),
     HOST_PORT: z.coerce.number(),
     DATABASE_URL: z.url(),
@@ -17,6 +15,9 @@ export const env = createEnv({
     FRONTEND_URL: z.url(),
     DISCORD_CLIENT_ID: z.string(),
     DISCORD_CLIENT_SECRET: z.string(),
+    SEED_USER_USERNAME: z.string(),
+    SEED_USER_EMAIL: z.email(),
+    SEED_USER_PASSWORD: z.string(),
   },
   runtimeEnv: process.env,
   emptyStringAsUndefined: true,

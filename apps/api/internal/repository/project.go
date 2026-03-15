@@ -14,12 +14,10 @@ import (
 type ProjectRepository interface {
 	InsertProject(ctx context.Context, q database.Querier, project *models.Project) error
 	InsertProjectMember(ctx context.Context, q database.Querier, projectMember *models.ProjectMember) error
-	FindProjectByIdentifier(ctx context.Context, q database.Querier, projectIdentifier string, userId *string) (*models.Project, error)
-	FindProjectByIdentifierIncludeDeleted(ctx context.Context, q database.Querier, projectIdentifier string) (*models.Project, error)
-	FindProjectMembersByProjectIdentifier(ctx context.Context, q database.Querier, projectIdentifier string, userId *string) ([]models.ProjectMember, error)
-	UpdateProject(ctx context.Context, q database.Querier, project models.Project) error
+	FindProjectByIdentifier(ctx context.Context, q database.Querier, projectIdentifier string, userId string) (*models.Project, error)
+	FindProjectMembersByProjectIdentifier(ctx context.Context, q database.Querier, projectIdentifier string, userId string) ([]models.ProjectMember, error)
 	FindProjectMemberByProjectIdAndUserId(ctx context.Context, q database.Querier, projectId string, userId string) (*models.ProjectMember, error)
-	DeleteProjectByIdentifier(ctx context.Context, q database.Querier, identifier string, deletedAt time.Time) error
+	UpdateProject(ctx context.Context, q database.Querier, project models.Project) error
 }
 
 type projectRepository struct{}
@@ -47,16 +45,11 @@ func (r *projectRepository) InsertProject(ctx context.Context, q database.Querie
 		project.UserId)
 
 	if err != nil {
-		if err != nil {
-			var pqErr *pq.Error
-			if errors.As(err, &pqErr) {
-				// 23505 is the error code for unique_violation
-				if pqErr.Code == "23505" {
-					return database.ErrUniqueViolation
-				}
+		var pqErr *pq.Error
+		if errors.As(err, &pqErr) {
+			if pqErr.Code == "23505" {
+				return database.ErrUniqueViolation
 			}
-
-			return err
 		}
 
 		return err
@@ -86,7 +79,7 @@ func (r *projectRepository) InsertProjectMember(ctx context.Context, q database.
 	return nil
 }
 
-func (r *projectRepository) FindProjectByIdentifier(ctx context.Context, q database.Querier, projectIdentifier string, userId *string) (*models.Project, error) {
+func (r *projectRepository) FindProjectByIdentifier(ctx context.Context, q database.Querier, projectIdentifier string, userId string) (*models.Project, error) {
 	query := `
 		SELECT
 			"id",
@@ -101,9 +94,8 @@ func (r *projectRepository) FindProjectByIdentifier(ctx context.Context, q datab
 			"createdAt",
 			"updatedAt",
 			"userId"
-		FROM "project" 
-		WHERE ("id" = $1 OR "slug" = $1) 
-			AND "deletedAt" IS NULL
+		FROM "active_project" 
+		WHERE ("id" = $1 OR "slug" = $1)
 			AND (
 				"status" = 'approved'
 				OR ("status" = 'draft' AND "userId" = $2)
@@ -111,50 +103,6 @@ func (r *projectRepository) FindProjectByIdentifier(ctx context.Context, q datab
 
 	project := &models.Project{}
 	err := q.QueryRowContext(ctx, query, projectIdentifier, userId).Scan(
-		&project.Id,
-		&project.Name,
-		&project.Slug,
-		&project.Summary,
-		&project.Description,
-		&project.IconUrl,
-		&project.Downloads,
-		&project.Type,
-		&project.Status,
-		&project.CreatedAt,
-		&project.UpdatedAt,
-		&project.UserId)
-
-	if err == sql.ErrNoRows {
-		return nil, nil
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	return project, nil
-}
-
-func (r *projectRepository) FindProjectByIdentifierIncludeDeleted(ctx context.Context, q database.Querier, projectIdentifier string) (*models.Project, error) {
-	query := `
-		SELECT
-			"id",
-			"name",
-			"slug",
-			"summary",
-			"description",
-			"iconUrl",
-			"downloads",
-			"type",
-			"status",
-			"createdAt",
-			"updatedAt",
-			"userId"
-		FROM "project" 
-		WHERE ("id" = $1 OR "slug" = $1);`
-
-	project := &models.Project{}
-	err := q.QueryRowContext(ctx, query, projectIdentifier).Scan(
 		&project.Id,
 		&project.Name,
 		&project.Slug,
@@ -189,7 +137,7 @@ type projectMemberRow struct {
 	Image     sql.NullString
 }
 
-func (r *projectRepository) FindProjectMembersByProjectIdentifier(ctx context.Context, q database.Querier, projectIdentifier string, userId *string) ([]models.ProjectMember, error) {
+func (r *projectRepository) FindProjectMembersByProjectIdentifier(ctx context.Context, q database.Querier, projectIdentifier string, userId string) ([]models.ProjectMember, error) {
 	query := `
         SELECT
             pm."id",
@@ -201,9 +149,8 @@ func (r *projectRepository) FindProjectMembersByProjectIdentifier(ctx context.Co
             u."image"
         FROM "project_member" pm
         JOIN "user" u ON pm."userId" = u."id"
-        JOIN "project" p ON pm."projectId" = p."id"
+        JOIN "active_project" p ON pm."projectId" = p."id"
         WHERE (pm."projectId" = $1 OR p."slug" = $1)
-			AND p."deletedAt" IS NULL
 			AND (
 				p."status" = 'approved'
 				OR (p."status" = 'draft' AND EXISTS (
@@ -267,33 +214,6 @@ func (r *projectRepository) FindProjectMembersByProjectIdentifier(ctx context.Co
 	return projectMembers, nil
 }
 
-func (r *projectRepository) UpdateProject(ctx context.Context, q database.Querier, project models.Project) error {
-	query := `
-        UPDATE project
-        SET "name" = $2,
-			"slug" = $3,
-            "summary" = $4,
-            "description" = $5,
-			"iconUrl" = $6,
-            "updatedAt" = now()
-        WHERE id = $1 AND "deletedAt" IS NULL;
-    `
-
-	_, err := q.ExecContext(ctx, query,
-		project.Id,
-		project.Name,
-		project.Slug,
-		project.Summary,
-		project.Description,
-		project.IconUrl)
-
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func (r *projectRepository) FindProjectMemberByProjectIdAndUserId(ctx context.Context, q database.Querier, projectId string, userId string) (*models.ProjectMember, error) {
 	query := `
 		SELECT
@@ -324,13 +244,25 @@ func (r *projectRepository) FindProjectMemberByProjectIdAndUserId(ctx context.Co
 	return projectMember, nil
 }
 
-func (r *projectRepository) DeleteProjectByIdentifier(ctx context.Context, q database.Querier, identifier string, deletedAt time.Time) error {
+func (r *projectRepository) UpdateProject(ctx context.Context, q database.Querier, project models.Project) error {
 	query := `
-        UPDATE "project"
-        SET "deletedAt" = $2
-        WHERE "id" = $1 OR "slug" = $1;
-	`
-	_, err := q.ExecContext(ctx, query, identifier, deletedAt)
+        UPDATE "active_project"
+        SET "name" = $2,
+			"slug" = $3,
+            "summary" = $4,
+            "description" = $5,
+			"iconUrl" = $6,
+            "updatedAt" = now()
+        WHERE id = $1;
+    `
+
+	_, err := q.ExecContext(ctx, query,
+		project.Id,
+		project.Name,
+		project.Slug,
+		project.Summary,
+		project.Description,
+		project.IconUrl)
 
 	if err != nil {
 		return err

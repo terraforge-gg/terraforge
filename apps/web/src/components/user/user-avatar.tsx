@@ -10,7 +10,7 @@ interface Props {
 
 const UserAvatar = ({ avatar, fallback, className }: Props) => {
   return (
-    <Avatar className={cn("w-9 h-9", className)}>
+    <Avatar className={cn("h-9 w-9", className)}>
       <AvatarImage src={avatar as string | undefined} />
       <AvatarFallback>{fallback}</AvatarFallback>
     </Avatar>
@@ -18,7 +18,7 @@ const UserAvatar = ({ avatar, fallback, className }: Props) => {
 };
 
 export const UserAvatarSkeleton = () => {
-  return <Skeleton className="w-9 h-9 rounded-full" />;
+  return <Skeleton className="h-9 w-9 rounded-full" />;
 };
 
 export default UserAvatar;

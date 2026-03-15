@@ -1,7 +1,8 @@
 "use client";
-import { LogOutIcon, PlusIcon, User2Icon } from "lucide-react";
-import { Button, buttonVariants } from "@/components/ui/button";
-import { signOut, useSession } from "@/lib/auth-client";
+
+import { signOut, useSession } from "@/lib/auth/client";
+import { useRouter } from "next/navigation";
+import Link from "./link";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,52 +11,25 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { LogOutIcon, User2Icon } from "lucide-react";
 import UserAvatar, { UserAvatarSkeleton } from "@/components/user/user-avatar";
-import { useState } from "react";
-import Link from "./link";
-import { useRouter } from "next/navigation";
+import SignInDialog from "./user/sign-in-dialog";
+import CreateProjectDialog from "@/components/project/create-project-dialog";
 
 const Navbar = () => {
   const { data: session, isPending } = useSession();
-  const [open, setOpen] = useState(false);
   const router = useRouter();
 
   return (
-    <header className="light:bg-gray-100/60 inset-x-0 top-0 z-10 py-4 hidden sm:block">
-      <div className="flex h-full items-center justify-between gap-2">
+    <header className="light:bg-gray-100/60 sticky inset-x-0 top-0 z-10 hidden border-b py-3 backdrop-blur-sm sm:block">
+      <div className="container mx-auto flex h-full max-w-6xl items-center justify-between gap-2 px-4">
         <div className="flex items-center gap-8 text-xl">
           <Link href="/">
-            <span className="text-foreground font-extrabold">terraforge</span>
-          </Link>
-          <Link
-            href="/"
-            className="text-foreground hover:decoration-primary text-lg font-semibold decoration-2 underline-offset-4 hover:underline"
-            activeProps={{ className: "decoration-primary underline" }}
-          >
-            Home
+            <span className="text-foreground">terraforge</span>
           </Link>
         </div>
         <div className="flex items-center justify-end space-x-8">
-          {!isPending && session && (
-            <DropdownMenu open={open} onOpenChange={setOpen}>
-              <DropdownMenuTrigger asChild>
-                <Button>
-                  <PlusIcon />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-40" align="start">
-                <DropdownMenuItem asChild>
-                  <Link
-                    className="hover:cursor-pointer"
-                    href="/new"
-                    onClick={() => setOpen(false)}
-                  >
-                    Create Project
-                  </Link>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
+          {!isPending && session && <CreateProjectDialog />}
           {isPending ? (
             <UserAvatarSkeleton />
           ) : session?.user ? (
@@ -73,14 +47,14 @@ const Navbar = () => {
                   <DropdownMenuLabel>My Account</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <Link href="/">
-                    <DropdownMenuItem className="hover:bg-accent hover:cursor-pointer">
+                    <DropdownMenuItem className="hover:cursor-pointer hover:bg-accent">
                       <User2Icon className="mr-2 h-4 w-4" />
                       <span>Profile</span>
                     </DropdownMenuItem>
                   </Link>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
-                    className="hover:bg-accent hover:cursor-pointer"
+                    className="hover:cursor-pointer hover:bg-accent"
                     onClick={() => {
                       signOut();
                       router.push("/");
@@ -94,12 +68,7 @@ const Navbar = () => {
             </div>
           ) : (
             <div className="flex gap-4">
-              <Link
-                href="/sign-in"
-                className={buttonVariants({ variant: "outline" })}
-              >
-                Sign In
-              </Link>
+              <SignInDialog />
             </div>
           )}
         </div>

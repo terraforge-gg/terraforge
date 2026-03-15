@@ -41,7 +41,11 @@ func (h *LoaderVersionHandler) GetLoaderVersionById(c *echo.Context) error {
 				Detail: "Loader Version not found.",
 			})
 		default:
-			panic(err)
+			h.logger.Error("Unhandled get loader version error", "Loader Version ID:", id, "Error:", err)
+			return c.JSON(http.StatusInternalServerError, dto.ProblemDetails{
+				Title:  "Internal Server Error",
+				Status: http.StatusInternalServerError,
+			})
 		}
 	}
 
@@ -57,7 +61,11 @@ func (h *LoaderVersionHandler) GetLoaderVersions(c *echo.Context) error {
 	if err != nil {
 		switch {
 		default:
-			panic(err)
+			h.logger.Error("Unhandled get loader versions error", "Error:", err)
+			return c.JSON(http.StatusInternalServerError, dto.ProblemDetails{
+				Title:  "Internal Server Error",
+				Status: http.StatusInternalServerError,
+			})
 		}
 	}
 

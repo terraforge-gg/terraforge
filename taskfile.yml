@@ -3,6 +3,9 @@ version: "3"
 vars:
   APP_NAME: "terraforge"
   API_BINARY_NAME: "{{.APP_NAME}}_api.exe"
+  BUCKET_NAME: terraforge-app-dev
+  AWS_REGION: eu-west-1
+  LOCALSTACK_ENDPOINT: http://localhost:4566
 
 tasks:
   api:build:
@@ -15,10 +18,42 @@ tasks:
       - task: api:build
     cmd: ./bin/{{.API_BINARY_NAME}}
 
+  web:start:
+    dir: ./apps/web
+    cmd: pnpm run dev
+
   auth:start:
     dir: ./apps/auth
     cmd: pnpm run dev
 
-  web:start:
-    dir: ./apps/web
-    cmd: pnpm run dev
+  auth:seed:
+    dir: ./apps/auth
+    cmd: pnpm run seed
+
+  create-bucket:
+    desc: "Create S3 bucket in LocalStack if it doesn't already exist"
+    silent: true
+    cmds:
+      - |
+        if ! aws --endpoint-url={{.LOCALSTACK_ENDPOINT}} s3api list-buckets \
+            >/dev/null 2>&1; then
+          echo "Error: LocalStack is not running or unreachable at {{.LOCALSTACK_ENDPOINT}}"
+          exit 1
+        fi
+      - |
+        if aws --endpoint-url={{.LOCALSTACK_ENDPOINT}} s3api head-bucket \
+            --bucket {{.BUCKET_NAME}} 2>/dev/null; then
+          echo "Bucket '{{.BUCKET_NAME}}' already exists, skipping creation."
+        else
+          echo "Creating bucket '{{.BUCKET_NAME}}'..."
+          aws --endpoint-url={{.LOCALSTACK_ENDPOINT}} s3api create-bucket \
+            --bucket {{.BUCKET_NAME}} \
+            --region {{.AWS_REGION}} \
+            --create-bucket-configuration LocationConstraint={{.AWS_REGION}}
+          aws --endpoint-url={{.LOCALSTACK_ENDPOINT}} s3api delete-public-access-block \
+            --bucket {{.BUCKET_NAME}}
+          aws --endpoint-url={{.LOCALSTACK_ENDPOINT}} s3api put-bucket-policy \
+            --bucket {{.BUCKET_NAME}} \
+            --policy "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"PublicReadGetObject\",\"Effect\":\"Allow\",\"Principal\":\"*\",\"Action\":\"s3:GetObject\",\"Resource\":\"arn:aws:s3:::{{.BUCKET_NAME}}/*\"}]}"
+          echo "Bucket '{{.BUCKET_NAME}}' created successfully."
+        fi

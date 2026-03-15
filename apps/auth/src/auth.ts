@@ -1,6 +1,6 @@
 import { betterAuth } from "better-auth";
-import { v7 as uuidv7 } from 'uuid';
-import { jwt, openAPI, username } from "better-auth/plugins"
+import { v7 as uuidv7 } from "uuid";
+import { jwt, openAPI, username } from "better-auth/plugins";
 import { env } from "./env.js";
 import { Pool } from "pg";
 
@@ -9,7 +9,7 @@ export const auth = betterAuth({
   basePath: "/api/auth",
   trustedOrigins: [env.FRONTEND_URL],
   emailAndPassword: {
-    enabled: true
+    enabled: true,
   },
   socialProviders: {
     discord: {
@@ -20,13 +20,13 @@ export const auth = betterAuth({
           username: profile.username,
         };
       },
-      redirectURI: env.FRONTEND_URL
+      redirectURI: env.FRONTEND_URL,
     },
   },
   session: {
     cookieCache: {
       enabled: false,
-    }
+    },
   },
   advanced: {
     cookies: {
@@ -35,21 +35,17 @@ export const auth = betterAuth({
         attributes: {
           httpOnly: true,
           secure: true,
-          domain: env.NODE_ENV === "development" ? "localhost" : ".terraforge.gg",
+          domain:
+            env.NODE_ENV === "development" ? "localhost" : "terraforge.gg",
           sameSite: "None",
-        }
-      }
+        },
+      },
     },
     database: {
       generateId: () => uuidv7(),
-
-    }
+    },
   },
-  plugins: [
-    username(),
-    jwt(),
-    openAPI(),
-  ],
+  plugins: [username(), jwt(), openAPI()],
   database: new Pool({
     connectionString: env.DATABASE_URL,
   }),

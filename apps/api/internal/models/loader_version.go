@@ -2,20 +2,19 @@ package models
 
 import "time"
 
-type LoaderVersionStatus string
+type LoaderVersionBuildType string
 
 const (
-	LoaderVersionStatusPreview LoaderVersionStatus = "preview"
-	LoaderVersionStatusStable  LoaderVersionStatus = "stable"
+	LoaderVersionStatusStable  LoaderVersionBuildType = "stable"
+	LoaderVersionStatusPreview LoaderVersionBuildType = "preview"
+	LoaderVersionStatusLegacy  LoaderVersionBuildType = "legacy"
 )
 
 type LoaderVersion struct {
-	Id              string
-	GameVersion     string
-	InternalVersion string
-	Status          LoaderVersionStatus
-	IsLegacy        bool
-	ReleasedAt      time.Time
-	CreatedAt       time.Time
-	UpdatedAt       time.Time
+	Id           string
+	GameVersion  string
+	VersionLabel string
+	BuildType    LoaderVersionBuildType
+	ReleasedAt   time.Time
+	UpdatedAt    time.Time
 }

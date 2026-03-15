@@ -32,7 +32,7 @@ func (s *loaderVersionService) GetLoaderVersionById(ctx context.Context, id stri
 	modLoaderVersion, err := s.loaderVersionRepo.FindLoaderVersionById(ctx, s.db, id)
 
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	if modLoaderVersion == nil {
@@ -46,7 +46,7 @@ func (s *loaderVersionService) GetLoaderVersionByGameVersion(ctx context.Context
 	loaderVersion, err := s.loaderVersionRepo.FindLoaderVersionByGameVersion(ctx, s.db, gameVersion)
 
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	if loaderVersion == nil {
@@ -60,37 +60,33 @@ func (s *loaderVersionService) GetLoaderVersions(ctx context.Context) ([]models.
 	loaderVersions, err := s.loaderVersionRepo.FindLoaderVersions(ctx, s.db)
 
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	return loaderVersions, nil
 }
 
 type CreateLoaderVersionParams struct {
-	Id              string
-	GameVersion     string
-	InternalVersion string
-	Status          string
-	IsLegacy        bool
-	ReleasedAt      time.Time
-	CreatedAt       time.Time
-	UpdatedAt       time.Time
+	Id           string
+	GameVersion  string
+	VersionLabel string
+	BuildType    string
+	ReleasedAt   time.Time
+	UpdatedAt    time.Time
 }
 
 func (s *loaderVersionService) CreateLoaderVersion(ctx context.Context, params CreateLoaderVersionParams) error {
 	err := s.loaderVersionRepo.InsertLoaderVersion(ctx, s.db, &models.LoaderVersion{
-		Id:              params.Id,
-		GameVersion:     params.GameVersion,
-		InternalVersion: params.InternalVersion,
-		Status:          models.LoaderVersionStatus(params.Status),
-		IsLegacy:        params.IsLegacy,
-		ReleasedAt:      params.ReleasedAt,
-		CreatedAt:       params.CreatedAt,
-		UpdatedAt:       params.UpdatedAt,
+		Id:           params.Id,
+		GameVersion:  params.GameVersion,
+		VersionLabel: params.VersionLabel,
+		BuildType:    models.LoaderVersionBuildType(params.BuildType),
+		ReleasedAt:   params.ReleasedAt,
+		UpdatedAt:    params.UpdatedAt,
 	})
 
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	return nil

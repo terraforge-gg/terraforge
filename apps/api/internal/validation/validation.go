@@ -2,6 +2,8 @@ package validation
 
 import (
 	"fmt"
+	"net/url"
+	"os"
 	"regexp"
 	"strings"
 
@@ -41,6 +43,10 @@ func (v *Validator) Validate(i any) error {
 				errors[field] = fmt.Sprintf("'%s' is not a valid slug.", err.Value())
 			case "project_type":
 				errors[field] = fmt.Sprintf("'%s' is not a valid project type.", err.Value())
+			case "file_url":
+				errors[field] = "invalid file url"
+			case "project_version_dependency_type":
+				errors[field] = "invalid project version dependency type"
 			default:
 				errors[field] = "Invalid"
 			}
@@ -63,4 +69,31 @@ func ValidateProjectType(fl validator.FieldLevel) bool {
 		return true
 	}
 	return false
+}
+
+func ValidateProjectDependencyType(fl validator.FieldLevel) bool {
+	switch models.ProjectReleaseDependencyType(fl.Field().String()) {
+	case models.ProjectReleaseDependencyTypeRequired,
+		models.ProjectReleaseDependencyTypeOptional:
+		return true
+	}
+	return false
+}
+
+func ValidateFileUrl(fl validator.FieldLevel) bool {
+	cdnUrl := os.Getenv("CDN_URL")
+	parsedCdnUrl, err := url.Parse(cdnUrl)
+
+	if err != nil {
+		return false
+	}
+
+	urlStr := fl.Field().String()
+	parsedURL, err := url.Parse(urlStr)
+
+	if err != nil {
+		return false
+	}
+
+	return strings.EqualFold(parsedURL.Host, parsedCdnUrl.Host)
 }

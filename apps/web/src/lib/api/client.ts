@@ -2,7 +2,7 @@ import createClient from "openapi-fetch";
 import type { Middleware } from "openapi-fetch";
 import type { paths } from "./schema";
 import { env } from "@/env";
-import { token } from "../auth-client";
+import { token } from "../auth/client";
 
 export const client = createClient<paths>({
   baseUrl: env.NEXT_PUBLIC_API_URL + "/" + env.NEXT_PUBLIC_API_VERSION,

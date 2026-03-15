@@ -336,6 +336,173 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/projects/{id|slug}/releases/upload-url": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The id or slug of the project */
+                "id|slug": components["parameters"]["ProjectIdentifier"];
+            };
+            cookie?: never;
+        };
+        /** Generate a presigned put url */
+        get: {
+            parameters: {
+                query: {
+                    fileSize: number;
+                };
+                header?: never;
+                path: {
+                    /** @description The id or slug of the project */
+                    "id|slug": components["parameters"]["ProjectIdentifier"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description successful operation */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": string;
+                    };
+                };
+                /** @description Bad request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Unauthorised */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/projects/{id|slug}/releases": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The id or slug of the project */
+                "id|slug": components["parameters"]["ProjectIdentifier"];
+            };
+            cookie?: never;
+        };
+        /** Get project releases */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The id or slug of the project */
+                    "id|slug": components["parameters"]["ProjectIdentifier"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description successful operation */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProjectRelease"][];
+                    };
+                };
+                /** @description Bad request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Create project release */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The id or slug of the project */
+                    "id|slug": components["parameters"]["ProjectIdentifier"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["CreateProjectReleaseRequest"];
+                };
+            };
+            responses: {
+                /** @description Project release created successfully */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProjectRelease"];
+                    };
+                };
+                /** @description Bad request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -398,14 +565,64 @@ export interface components {
             totalHits: number;
         };
         /** @enum {string} */
-        LoaderVersionStatus: "stable" | "preview";
+        LoaderVersionBuildType: "stable" | "preview" | "legacy";
         LoaderVersion: {
             id: string;
-            version: string;
-            status: components["schemas"]["LoaderVersionStatus"];
-            isLegacy: boolean;
+            gameVersion: string;
+            versionLabel: string;
+            buildType: components["schemas"]["LoaderVersionBuildType"];
             /** Format: date-time */
             releasedAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        ProjectRelease: {
+            /** @description Version id */
+            id: string;
+            /** @description Project id */
+            projectId: string;
+            /** @description Version name */
+            name: string;
+            /** @description Version changelog */
+            changelog?: string;
+            versionNumber: string;
+            loaderVersion: components["schemas"]["LoaderVersion"];
+            /** Format: int64 */
+            downloads: number;
+            fileUrl: string;
+            /** Format: int64 */
+            fileSize: number;
+            fileHash: string;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+            /** Format: date-time */
+            publishedAt?: string;
+            dependencies: components["schemas"]["ProjectReleaseDependency"][];
+        };
+        ProjectReleaseDependency: {
+            /** @description id */
+            id: string;
+            releaseId: string;
+            dependencyProjectId: string;
+            dependencyType: components["schemas"]["ProjectReleaseDependencyType"];
+            /** Format: date-time */
+            createdAt: string;
+        };
+        /** @enum {string} */
+        ProjectReleaseDependencyType: "required" | "optional";
+        CreateProjectReleaseDependencyRequest: {
+            type: components["schemas"]["ProjectReleaseDependencyType"];
+            projectId: string;
+            minVersionNumber?: string;
+        };
+        CreateProjectReleaseRequest: {
+            name: string;
+            versionNumber: string;
+            loaderVersionId: string;
+            fileUrl: string;
+            dependencies?: components["schemas"]["CreateProjectReleaseDependencyRequest"][];
         };
         CreateProjectRequest: {
             type: components["schemas"]["ProjectType"];

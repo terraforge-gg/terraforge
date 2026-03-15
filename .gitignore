@@ -1,8 +1,30 @@
+# dependencies
 node_modules/
+
+# misc
 .DS_Store
-.env
+*.pem
+Thumbs.db
+terminals.json
+
+# testing
+/coverage
+
+# next.js
 .next/
-.output/
-todos.json
+
+# production
 bin/
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# env files
+.env*
+
+# typescript
+*.tsbuildinfo
 next-env.d.ts

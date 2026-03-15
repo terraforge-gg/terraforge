@@ -25,12 +25,10 @@ func (r *loaderVersionRepository) FindLoaderVersionById(ctx context.Context, q d
 	query := `
 		SELECT 
 			"id",
-			"gameVersion"
-			"internalVersion",
-			"status",
-			"isLegacy",
+			"gameVersion",
+			"versionLabel",
+			"buildType",
 			"releasedAt",
-			"createdAt",
 			"updatedAt"
 		FROM "loader_version" 
 		WHERE "id" = $1;
@@ -41,11 +39,9 @@ func (r *loaderVersionRepository) FindLoaderVersionById(ctx context.Context, q d
 	err := q.QueryRow(query, id).Scan(
 		&lv.Id,
 		&lv.GameVersion,
-		&lv.InternalVersion,
-		&lv.Status,
-		&lv.IsLegacy,
+		&lv.VersionLabel,
+		&lv.BuildType,
 		&lv.ReleasedAt,
-		&lv.CreatedAt,
 		&lv.UpdatedAt)
 
 	if err == sql.ErrNoRows {
@@ -64,11 +60,9 @@ func (r *loaderVersionRepository) FindLoaderVersionByGameVersion(ctx context.Con
 		SELECT 
 			"id",
 			"gameVersion",
-			"internalVersion",
-			"status",
-			"isLegacy",
+			"versionLabel",
+			"buildType",
 			"releasedAt",
-			"createdAt",
 			"updatedAt"
 		FROM "loader_version" 
 		WHERE "gameVersion" = $1;
@@ -79,11 +73,9 @@ func (r *loaderVersionRepository) FindLoaderVersionByGameVersion(ctx context.Con
 	err := q.QueryRow(query, id).Scan(
 		&lv.Id,
 		&lv.GameVersion,
-		&lv.InternalVersion,
-		&lv.Status,
-		&lv.IsLegacy,
+		&lv.VersionLabel,
+		&lv.BuildType,
 		&lv.ReleasedAt,
-		&lv.CreatedAt,
 		&lv.UpdatedAt)
 
 	if err == sql.ErrNoRows {
@@ -101,15 +93,14 @@ func (r *loaderVersionRepository) FindLoaderVersions(ctx context.Context, q data
 	query := `
 		SELECT
 			"id",
-			"gameVersion"
-			"internalVersion",
-			"status",
-			"isLegacy",
+			"gameVersion",
+			"versionLabel",
+			"buildType",
 			"releasedAt",
-			"createdAt",
 			"updatedAt"
 		FROM "loader_version"
-		ORDER BY "releasedAt" DESC;
+		ORDER BY "gameVersion" DESC, "buildType" ASC
+		LIMIT 10;
 	`
 
 	rows, err := q.QueryContext(ctx, query)
@@ -127,11 +118,9 @@ func (r *loaderVersionRepository) FindLoaderVersions(ctx context.Context, q data
 		err := rows.Scan(
 			&lv.Id,
 			&lv.GameVersion,
-			&lv.InternalVersion,
-			&lv.Status,
-			&lv.IsLegacy,
+			&lv.VersionLabel,
+			&lv.BuildType,
 			&lv.ReleasedAt,
-			&lv.CreatedAt,
 			&lv.UpdatedAt)
 
 		if err != nil {
@@ -150,19 +139,17 @@ func (r *loaderVersionRepository) FindLoaderVersions(ctx context.Context, q data
 
 func (r *loaderVersionRepository) InsertLoaderVersion(ctx context.Context, q database.Querier, loaderVersion *models.LoaderVersion) error {
 	query := `INSERT INTO "loader_version"
-		("id", "gameVersion", "internalVersion", "status", "isLegacy", "releasedAt", "createdAt", "updatedAt")
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8);`
+		("id", "gameVersion", "versionLabel", "buildType", "releasedAt", "updatedAt")
+		VALUES ($1, $2, $3, $4, $5, $6);`
 
 	_, err := q.ExecContext(
 		ctx,
 		query,
 		loaderVersion.Id,
 		loaderVersion.GameVersion,
-		loaderVersion.InternalVersion,
-		loaderVersion.Status,
-		loaderVersion.IsLegacy,
+		loaderVersion.VersionLabel,
+		loaderVersion.BuildType,
 		loaderVersion.ReleasedAt,
-		loaderVersion.CreatedAt,
 		loaderVersion.UpdatedAt)
 
 	if err != nil {

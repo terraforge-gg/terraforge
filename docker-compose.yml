@@ -34,6 +34,27 @@ services:
       timeout: 5s
       retries: 5
 
+  localstack:
+    image: localstack/localstack:latest
+    container_name: localstack
+    restart: unless-stopped
+    environment:
+      - SERVICES=s3,sqs,sns,lambda,dynamodb
+      - DEBUG=0
+      - AWS_DEFAULT_REGION=eu-west-1
+      - DOCKER_HOST=unix:///var/run/docker.sock
+    ports:
+      - "4566:4566"
+    volumes:
+      - localstack_data:/var/lib/localstack
+      - /var/run/docker.sock:/var/run/docker.sock
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 volumes:
   postgres_data:
   meilisearch_data:
+  localstack_data:

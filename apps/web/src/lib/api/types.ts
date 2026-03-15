@@ -41,3 +41,31 @@ export const PROJECT_MEMBER_ROLE = {
 
 export type ProjectMember = components["schemas"]["ProjectMember"];
 export type ProjectSearch = components["schemas"]["ProjectSearch"];
+export type ProjectRelease = components["schemas"]["ProjectRelease"];
+export type ProjectReleaseDependency =
+  components["schemas"]["ProjectReleaseDependency"];
+
+export type ProjectReleaseDependencyType =
+  components["schemas"]["ProjectReleaseDependencyType"];
+export const PROJECT_RELEASE_DEPENDENCY_TYPES = [
+  "required",
+  "optional",
+] as const satisfies ProjectReleaseDependencyType[];
+export const PROJECT_RELEASE_DEPENDENCY_TYPE = {
+  REQUIRED: "required",
+  OPTIONAL: "optional",
+} as const satisfies Record<string, ProjectReleaseDependencyType>;
+
+export type LoaderVersion = components["schemas"]["LoaderVersion"];
+export type LoaderVersionBuildType =
+  components["schemas"]["LoaderVersionBuildType"];
+export const LOADER_VERSION_BUILD_TYPES = [
+  "stable",
+  "preview",
+  "legacy",
+] as const satisfies LoaderVersionBuildType[];
+export const LOADER_VERSION_BUILD_TYPE = {
+  STABLE: "stable",
+  PREVIEW: "preview",
+  LEGACY: "legacy",
+} as const satisfies Record<string, LoaderVersionBuildType>;

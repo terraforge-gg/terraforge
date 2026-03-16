@@ -60,3 +60,11 @@ func ProjectMemberToProjectMemberResponse(member models.ProjectMember) ProjectMe
 		Image:    member.User.Image,
 	}
 }
+
+type UpdateProjectRequest struct {
+	Name        *string `json:"name,omitempty" validate:"omitempty,min=3,max=100"`
+	Slug        *string `json:"slug,omitempty" validate:"omitempty,url_slug,min=3,max=100"`
+	Summary     *string `json:"summary,omitempty" validate:"omitempty,max=120"`
+	Description *string `json:"description,omitempty"`
+	IconUrl     *string `json:"iconUrl,omitempty" validate:"omitempty,url"`
+}

@@ -163,3 +163,102 @@ func (h *ProjectHandler) CreateProject(c *echo.Context) error {
 
 	return c.JSON(http.StatusCreated, dto.ProjectToProjectResponse(*project))
 }
+
+func (h *ProjectHandler) UpdateProject(c *echo.Context) error {
+	ctx := c.Request().Context()
+	identifier := c.Param("identifier")
+	userId, ok := utils.GetUserId(c)
+
+	if !ok {
+		return c.JSON(http.StatusUnauthorized, dto.ProblemDetails{
+			Title:  "Unauthorized",
+			Status: http.StatusUnauthorized,
+			Detail: "You are not authorised to perform this action",
+		})
+	}
+
+	var req dto.UpdateProjectRequest
+
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, dto.ProblemDetails{
+			Title:  "Bad Request",
+			Status: http.StatusBadRequest,
+			Detail: "Invalid request.",
+		})
+	}
+
+	if err := c.Validate(&req); err != nil {
+		return err
+	}
+
+	project, err := h.projectService.UpdateProject(ctx, service.UpdateProjectParams{
+		Identifier:  identifier,
+		Slug:        req.Slug,
+		Name:        req.Name,
+		Summary:     req.Summary,
+		IconUrl:     req.IconUrl,
+		Description: req.Description,
+		UserId:      userId,
+	})
+
+	if err != nil {
+		switch {
+		case errors.Is(err, custom_errors.ErrProjectNotFound):
+			return c.JSON(http.StatusNotFound, dto.ProblemDetails{
+				Title:  "Not Found",
+				Status: http.StatusNotFound,
+				Detail: "Project not found.",
+			})
+		case errors.Is(err, custom_errors.ErrProjectUnauthorisedAction):
+			return c.JSON(http.StatusUnauthorized, dto.ProblemDetails{
+				Title:  "Unauthorised",
+				Status: http.StatusUnauthorized,
+				Detail: "You are not authorised to perform this action",
+			})
+		default:
+			panic(err)
+		}
+	}
+
+	return c.JSON(http.StatusOK, dto.ProjectToProjectResponse(*project))
+}
+
+func (h *ProjectHandler) DeleteProject(c *echo.Context) error {
+	ctx := c.Request().Context()
+	identifier := c.Param("identifier")
+	userId, ok := utils.GetUserId(c)
+
+	if !ok {
+		return c.JSON(http.StatusUnauthorized, dto.ProblemDetails{
+			Title:  "Unauthorized",
+			Status: http.StatusUnauthorized,
+			Detail: "You are not authorised to perform this action",
+		})
+	}
+
+	err := h.projectService.DeleteProject(ctx, service.DeleteProjectParams{
+		Identifier: identifier,
+		UserId:     userId,
+	})
+
+	if err != nil {
+		switch {
+		case errors.Is(err, custom_errors.ErrProjectNotFound):
+			return c.JSON(http.StatusNotFound, dto.ProblemDetails{
+				Title:  "Not Found",
+				Status: http.StatusNotFound,
+				Detail: "Project not found.",
+			})
+		case errors.Is(err, custom_errors.ErrProjectUnauthorisedAction):
+			return c.JSON(http.StatusUnauthorized, dto.ProblemDetails{
+				Title:  "Unauthorised",
+				Status: http.StatusUnauthorized,
+				Detail: "You are not authorised to perform this action",
+			})
+		default:
+			panic(err)
+		}
+	}
+
+	return c.NoContent(http.StatusOK)
+}

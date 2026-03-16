@@ -18,6 +18,7 @@ type ProjectRepository interface {
 	FindProjectMembersByProjectIdentifier(ctx context.Context, q database.Querier, projectIdentifier string, userId string) ([]models.ProjectMember, error)
 	FindProjectMemberByProjectIdAndUserId(ctx context.Context, q database.Querier, projectId string, userId string) (*models.ProjectMember, error)
 	UpdateProject(ctx context.Context, q database.Querier, project models.Project) error
+	DeleteProjectByIdentifier(ctx context.Context, q database.Querier, identifier string, deletedAt time.Time) error
 }
 
 type projectRepository struct{}
@@ -263,6 +264,21 @@ func (r *projectRepository) UpdateProject(ctx context.Context, q database.Querie
 		project.Summary,
 		project.Description,
 		project.IconUrl)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *projectRepository) DeleteProjectByIdentifier(ctx context.Context, q database.Querier, identifier string, deletedAt time.Time) error {
+	query := `
+        UPDATE "active_project"
+        SET "deletedAt" = $2
+        WHERE "id" = $1 OR "slug" = $1;
+	`
+	_, err := q.ExecContext(ctx, query, identifier, deletedAt)
 
 	if err != nil {
 		return err

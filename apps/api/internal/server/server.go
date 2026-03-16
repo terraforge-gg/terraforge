@@ -130,6 +130,8 @@ func NewServer(cfg *config.Config, logger *slog.Logger, db *sql.DB) (*echo.Echo,
 	v1.POST("/projects", projectHandler.CreateProject, authMiddleware)
 	v1.GET("/projects/:identifier", projectHandler.GetProjectByIdentifier, authOptionalMiddleware)
 	v1.GET("/projects/:identifier/members", projectHandler.GetProjectMembers, authOptionalMiddleware)
+	v1.PATCH("/projects/:identifier", projectHandler.UpdateProject, authMiddleware)
+	v1.DELETE("/projects/:identifier", projectHandler.DeleteProject, authMiddleware)
 
 	v1.POST("/projects/:identifier/releases", projectReleaseHandler.CreateRelease, authMiddleware)
 	v1.GET("/projects/:identifier/releases", projectReleaseHandler.GetReleases, authOptionalMiddleware)

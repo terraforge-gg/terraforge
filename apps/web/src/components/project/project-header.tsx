@@ -27,11 +27,7 @@ type ProjectHeaderProps = {
   showSettings?: boolean;
 };
 
-const ProjectHeader = ({
-  project,
-  latestRelease,
-  showSettings,
-}: ProjectHeaderProps) => {
+const ProjectHeader = ({ project, showSettings }: ProjectHeaderProps) => {
   const { name, summary, iconUrl, downloads } = project;
 
   const iconSize = "w-24 h-24";

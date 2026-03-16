@@ -1,0 +1,90 @@
+"use client";
+import { useProjectData } from "@/components/project/project-data-provider";
+import api from "@/lib/api/api";
+import { useMutation } from "@tanstack/react-query";
+import { notFound, useRouter } from "next/navigation";
+import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
+import { PROJECT_MEMBER_ROLE } from "@/lib/api/types";
+import UpdateProjectForm from "@/components/project/update-project-form";
+import { useSession } from "@/lib/auth/client";
+
+const ModSettingsPage = () => {
+  const { project: mod, members } = useProjectData();
+  const router = useRouter();
+  const { data: session } = useSession();
+  const { mutate: deleteProject, isPending: isDeletePending } = useMutation({
+    mutationFn: api.project.delete,
+    onSuccess: () => {
+      toast.success("Project deleted");
+      router.refresh();
+      router.push("/");
+    },
+    onError: (error) => {
+      toast.error(error.message ?? "Something went wrong.");
+    },
+  });
+
+  if (!mod || !members) {
+    notFound();
+  }
+
+  const role = members?.find((x) => x.userId === session?.user.id)?.role;
+  const canDelete =
+    role === PROJECT_MEMBER_ROLE.OWNER || role === PROJECT_MEMBER_ROLE.ADMIN;
+
+  return (
+    <div className="flex flex-col gap-4">
+      <UpdateProjectForm project={mod} />
+      {canDelete && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Danger</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive">Delete</Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This action cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel disabled={isDeletePending}>
+                    Cancel
+                  </AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={() => deleteProject(mod.id)}
+                    disabled={isDeletePending}
+                  >
+                    {isDeletePending && <Spinner />}
+                    Confirm
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+};
+
+export default ModSettingsPage;

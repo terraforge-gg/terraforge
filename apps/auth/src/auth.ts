@@ -20,7 +20,6 @@ export const auth = betterAuth({
           username: profile.username,
         };
       },
-      redirectURI: env.FRONTEND_URL,
     },
   },
   session: {

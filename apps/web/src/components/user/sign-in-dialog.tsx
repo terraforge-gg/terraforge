@@ -21,6 +21,7 @@ import { signIn } from "@/lib/auth/client";
 import { signInSchema } from "@/lib/auth/models/sign-in";
 import { useForm } from "@tanstack/react-form";
 import { toast } from "sonner";
+import { env } from "@/env";
 
 const SignInDialog = () => {
   const router = useRouter();
@@ -143,6 +144,7 @@ const SignInDialog = () => {
             onClick={async () => {
               await signIn.social({
                 provider: "discord",
+                callbackURL: env.NEXT_PUBLIC_APP_URL,
               });
             }}
           >

@@ -15,30 +15,38 @@ type ProjectReleasesProps = {
 
 const ProjectReleases = ({ releases }: ProjectReleasesProps) => {
   return (
-    <Accordion type="single" collapsible>
+    <Accordion type="single" collapsible defaultValue="releases">
       <AccordionItem value="releases">
-        <AccordionTrigger>releases</AccordionTrigger>
+        <AccordionTrigger className="tracking-widest">
+          RELEASES
+        </AccordionTrigger>
         <AccordionContent>
-          {releases.map((x, i) => (
-            <div
-              key={x.id}
-              className={cn(
-                "flex justify-between rounded-md p-2 hover:bg-accent",
-                i === 0 && "rounded-md bg-accent p-2",
-              )}
-            >
-              <div className="flex flex-col items-center">
-                <span className="font-mono text-lg">{x.versionNumber}</span>
-                {i === 0 && (
-                  <span className="font-mono text-xs text-chart-1">LATEST</span>
+          {releases?.length > 0 ? (
+            releases.map((x, i) => (
+              <div
+                key={x.id}
+                className={cn(
+                  "flex justify-between rounded-md p-2 hover:bg-accent",
+                  i === 0 && "rounded-md bg-accent p-2",
                 )}
+              >
+                <div className="flex flex-col items-center">
+                  <span className="font-mono text-lg">{x.versionNumber}</span>
+                  {i === 0 && (
+                    <span className="font-mono text-xs text-chart-1">
+                      LATEST
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center justify-center gap-2">
+                  <DownloadIcon size={16} />
+                  {x.downloads}
+                </div>
               </div>
-              <div className="flex items-center justify-center gap-2">
-                <DownloadIcon size={16} />
-                {x.downloads}
-              </div>
-            </div>
-          ))}
+            ))
+          ) : (
+            <div className="text-muted-foreground">NO RELEASES FOUND</div>
+          )}
         </AccordionContent>
       </AccordionItem>
     </Accordion>

@@ -17,7 +17,9 @@ const ProjectMembers = ({ members }: ProjectMembersProps) => {
   return (
     <Accordion type="single" collapsible defaultValue="members">
       <AccordionItem value="members">
-        <AccordionTrigger>members</AccordionTrigger>
+        <AccordionTrigger className="tracking-widest">
+          MAINTAINERS
+        </AccordionTrigger>
         <AccordionContent>
           {members.map((x) => (
             <div key={x.userId} className="flex items-center justify-between">

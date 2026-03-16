@@ -13,7 +13,6 @@ const ModPage = () => {
 
   return (
     <section className="flex flex-col gap-4">
-      <h2 className="font-mono text-xs">DESCRIPTION</h2>
       <p className="text-muted-foreground">{mod.description}</p>
     </section>
   );

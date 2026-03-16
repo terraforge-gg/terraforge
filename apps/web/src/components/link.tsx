@@ -1,5 +1,6 @@
 "use client";
 
+import { cn } from "@/lib/utils";
 import NextLink, { LinkProps as NextLinkProps } from "next/link";
 import { usePathname } from "next/navigation";
 import { AnchorHTMLAttributes, ReactNode } from "react";
@@ -30,18 +31,11 @@ export function Link({
     ? pathname === hrefString
     : pathname.startsWith(hrefString);
 
-  const { className: activeClassName, ...restActiveProps } = activeProps ?? {};
-
-  const mergedClassName =
-    [className, isActive ? activeClassName : ""].filter(Boolean).join(" ") ||
-    undefined;
-
   return (
     <NextLink
       href={href}
-      className={mergedClassName}
+      className={cn(className, isActive && activeProps?.className)}
       {...props}
-      {...(isActive ? restActiveProps : {})}
     >
       {children}
     </NextLink>

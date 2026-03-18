@@ -80,8 +80,8 @@ const ProjectHeader = ({ project, showSettings }: ProjectHeaderProps) => {
             <ItemContent className="flex-none text-center">
               <ItemDescription>
                 <DownloadReleaseButton
+                  text="download"
                   fileUrl={latestRelease.fileUrl}
-                  size="icon-lg"
                 />
               </ItemDescription>
             </ItemContent>

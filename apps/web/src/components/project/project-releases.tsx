@@ -1,17 +1,8 @@
 "use client";
 import { ProjectRelease } from "@/lib/api/types";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
-import { DownloadIcon } from "lucide-react";
-import { cn } from "@/lib/utils";
 import CreateProjectReleaseDialog from "./create-release-dialog";
 import { useQuery } from "@tanstack/react-query";
 import { getProjectReleasesQueryOptions } from "@/lib/api/query-options/project-release";
-import { Spinner } from "../ui/spinner";
 
 type ProjectReleasesProps = {
   projectId: string;
@@ -26,7 +17,7 @@ const ProjectReleases = ({
   initialReleases,
   showCreateRelease,
 }: ProjectReleasesProps) => {
-  const { data: releases, isPending } = useQuery(
+  const { data: releases } = useQuery(
     getProjectReleasesQueryOptions(
       { projectSlug: projectSlug },
       {
@@ -37,52 +28,32 @@ const ProjectReleases = ({
   );
 
   return (
-    <Accordion type="single" collapsible defaultValue="releases">
-      <AccordionItem value="releases">
-        <AccordionTrigger className="tracking-widest">
-          RELEASES
-        </AccordionTrigger>
-        <AccordionContent className="flex h-auto flex-col gap-2">
-          {showCreateRelease && (
-            <CreateProjectReleaseDialog
-              projectId={projectId}
-              projectSlug={projectSlug}
-            />
-          )}
-          {isPending && (
-            <div className="flex justify-center">
-              <Spinner />
-            </div>
-          )}
-          {releases && !isPending && releases.length > 0 ? (
-            releases.map((x, i) => (
+    <div className="flex flex-col gap-4">
+      <div className="font-mono text-sm">LATEST RELEASES</div>
+      <div className="flex flex-col gap-2">
+        {showCreateRelease && (
+          <CreateProjectReleaseDialog
+            projectId={projectId}
+            projectSlug={projectSlug}
+          />
+        )}
+        {releases && releases.length > 0 ? (
+          <div className="divide-y divide-border">
+            {releases?.map((x) => (
               <div
                 key={x.id}
-                className={cn(
-                  "flex justify-between rounded-md p-2 hover:bg-accent",
-                  i === 0 && "rounded-md bg-accent p-2",
-                )}
+                className="flex items-center justify-between py-1"
               >
-                <div className="flex flex-col items-center">
-                  <span className="font-mono text-lg">{x.versionNumber}</span>
-                  {i === 0 && (
-                    <span className="font-mono text-xs text-chart-1">
-                      LATEST
-                    </span>
-                  )}
-                </div>
-                <div className="flex items-center justify-center gap-2">
-                  <DownloadIcon size={16} />
-                  {x.downloads}
-                </div>
+                <div className="font-mono text-sm">{x.versionNumber}</div>
+                <div className="font-mono text-sm">{x.publishedAt}</div>
               </div>
-            ))
-          ) : (
-            <div className="text-muted-foreground">NO RELEASES FOUND</div>
-          )}
-        </AccordionContent>
-      </AccordionItem>
-    </Accordion>
+            ))}
+          </div>
+        ) : (
+          <div>NO RELEASES</div>
+        )}
+      </div>
+    </div>
   );
 };
 

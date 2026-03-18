@@ -15,18 +15,22 @@ import { LogOutIcon, User2Icon } from "lucide-react";
 import UserAvatar, { UserAvatarSkeleton } from "@/components/user/user-avatar";
 import SignInDialog from "./user/sign-in-dialog";
 import CreateProjectDialog from "@/components/project/create-project-dialog";
+import { Badge } from "./ui/badge";
 
 const Navbar = () => {
   const { data: session, isPending } = useSession();
   const router = useRouter();
 
   return (
-    <header className="light:bg-gray-100/60 sticky inset-x-0 top-0 z-10 hidden border-b py-3 backdrop-blur-sm sm:block">
+    <header className="light:bg-gray-100/60 sticky inset-x-0 top-0 z-10 hidden border-b py-2 backdrop-blur-sm sm:block">
       <div className="container mx-auto flex h-full max-w-6xl items-center justify-between gap-2 px-4">
-        <div className="flex items-center gap-8 text-xl">
+        <div className="flex items-center gap-2 text-lg">
           <Link href="/">
             <span className="text-foreground">terraforge</span>
           </Link>
+          <Badge className="font-mono" variant="outline">
+            alpha
+          </Badge>
         </div>
         <div className="flex items-center justify-end space-x-8">
           {!isPending && session && <CreateProjectDialog />}

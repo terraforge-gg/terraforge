@@ -80,6 +80,7 @@ const CreateProjectReleaseDialog = ({
       });
       form.reset();
       toast.success("Project release created!");
+      setOpen(false);
     },
     onError: (error) => {
       toast.error(error.message);
@@ -102,7 +103,7 @@ const CreateProjectReleaseDialog = ({
     ),
   );
 
-  const { mutate: uploadProjectVersionFile, isPending: isUploadPending } =
+  const { mutate: uploadProjectVersionFile } =
     useMutation<void, Error, { presignedPutUrl: string; file: File }>({
       mutationKey: ["upload-project-version", projectId],
       mutationFn: async ({ presignedPutUrl: url, file: f }) => {
@@ -162,7 +163,12 @@ const CreateProjectReleaseDialog = ({
             form.handleSubmit();
           }}
         >
-          <Input id="picture" type="file" onChange={handleFileChange} />
+          <Input
+            id="picture"
+            type="file"
+            accept=".tmod"
+            onChange={handleFileChange}
+          />
           <FieldGroup>
             <form.Field
               name="name"
@@ -181,7 +187,6 @@ const CreateProjectReleaseDialog = ({
                         onChange={(e) => field.handleChange(e.target.value)}
                         aria-invalid={isInvalid}
                         autoComplete="off"
-                        className="pl-0!"
                       />
                     </InputGroup>
                     {isInvalid && (
@@ -210,7 +215,6 @@ const CreateProjectReleaseDialog = ({
                         onChange={(e) => field.handleChange(e.target.value)}
                         aria-invalid={isInvalid}
                         autoComplete="off"
-                        className="pl-0!"
                       />
                     </InputGroup>
                     {isInvalid && (

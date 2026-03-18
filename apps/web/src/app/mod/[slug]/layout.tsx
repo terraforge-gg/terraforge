@@ -7,7 +7,7 @@ import api from "@/lib/api/api";
 import ProjectHeader from "@/components/project/project-header";
 import ProjectMembers from "@/components/project/project-members";
 import ProjectReleases from "@/components/project/project-releases";
-import ProjectCompatibility from "@/components/project/project-compatibility";
+import { Separator } from "@/components/ui/separator";
 
 const ModLayout = async ({
   children,
@@ -18,9 +18,19 @@ const ModLayout = async ({
 }) => {
   const { slug } = await params;
   const session = await getServerSession();
-  const mod = await api.project.identifier(slug);
-  const members = await api.project.members(slug);
-  const releases = await api.project.releases({ projectSlug: slug });
+
+  let mod = undefined;
+  let members = undefined;
+  let releases = undefined;
+
+  try {
+    mod = await api.project.identifier(slug);
+    members = await api.project.members(slug);
+    releases = await api.project.releases({ projectSlug: slug });
+  } catch (error) {
+    console.error(error);
+    throw new Error("Failed to fetch mod info");
+  }
 
   if (!mod || !members) {
     notFound();
@@ -32,17 +42,15 @@ const ModLayout = async ({
   const canCreateRelease =
     role === PROJECT_MEMBER_ROLE.OWNER || role === PROJECT_MEMBER_ROLE.ADMIN;
 
-  const latestRelease = releases?.[0];
-
   return (
     <ProjectDataProvider project={mod} members={members}>
       <ProjectHeader project={mod} showSettings={canViewSettings} />
       <div className="flex min-h-screen gap-10">
         <div className="flex min-w-0 flex-1 flex-col gap-6">{children}</div>
         <aside className="w-80 shrink-0">
-          <div className="sticky top-20 flex flex-col gap-4">
+          <div className="sticky top-20 flex flex-col gap-8">
             <ProjectMembers members={members} />
-            {latestRelease && <ProjectCompatibility release={latestRelease} />}
+            <Separator />
             <ProjectReleases
               projectId={mod.id}
               projectSlug={mod.slug}

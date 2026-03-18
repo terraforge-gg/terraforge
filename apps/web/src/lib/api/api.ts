@@ -2,6 +2,7 @@ import { cache } from "react";
 import { client } from "./client";
 import type { CreateProjectSchema } from "./models/project/create";
 import type {
+  LoaderVersion,
   Project,
   ProjectIdentifier,
   ProjectMember,
@@ -10,6 +11,11 @@ import type {
 } from "./types";
 import { UpdateProjectParams } from "./models/project/update";
 import { SearchProjectParams } from "./models/project/search";
+import {
+  CreateProjectReleaseParams,
+  GetProjectReleasePresignedPutUrlParams,
+  GetProjectReleasesParams,
+} from "./models/project/create-release";
 
 const api = {
   project: {
@@ -112,12 +118,12 @@ const api = {
       return data;
     },
     releases: async (
-      identifier: ProjectIdentifier,
+      params: GetProjectReleasesParams,
     ): Promise<ProjectRelease[]> => {
       const { data, error } = await client.GET("/projects/{id|slug}/releases", {
         params: {
           path: {
-            "id|slug": identifier,
+            "id|slug": params?.projectSlug,
           },
         },
       });
@@ -129,6 +135,60 @@ const api = {
           default:
             throw new Error(error.detail);
         }
+      }
+
+      return data;
+    },
+    createRelease: async (
+      params: CreateProjectReleaseParams,
+    ): Promise<ProjectRelease> => {
+      const { data, error } = await client.POST(
+        "/projects/{id|slug}/releases",
+        {
+          params: {
+            path: { "id|slug": params.projectId },
+          },
+          body: {
+            ...params.values,
+          },
+        },
+      );
+
+      if (error) {
+        throw Error(error.detail);
+      }
+
+      return data;
+    },
+    getProjectReleasePresignedPutUrl: async ({
+      projectId,
+      fileSize,
+    }: GetProjectReleasePresignedPutUrlParams): Promise<string> => {
+      const { data, error } = await client.GET(
+        "/projects/{id|slug}/releases/upload-url",
+        {
+          params: {
+            path: { "id|slug": projectId },
+            query: {
+              fileSize,
+            },
+          },
+        },
+      );
+
+      if (error) {
+        throw new Error(error.detail);
+      }
+
+      return data;
+    },
+  },
+  loaderVersion: {
+    list: async (): Promise<LoaderVersion[]> => {
+      const { data, error } = await client.GET("/loader-versions");
+
+      if (error) {
+        throw new Error(error.detail);
       }
 
       return data;

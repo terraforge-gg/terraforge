@@ -20,7 +20,7 @@ const ModLayout = async ({
   const session = await getServerSession();
   const mod = await api.project.identifier(slug);
   const members = await api.project.members(slug);
-  const releases = await api.project.releases(slug);
+  const releases = await api.project.releases({ projectSlug: slug });
 
   if (!mod || !members) {
     notFound();
@@ -29,23 +29,26 @@ const ModLayout = async ({
   const role = members?.find((x) => x.userId === session?.user.id)?.role;
   const canViewSettings =
     role === PROJECT_MEMBER_ROLE.OWNER || role === PROJECT_MEMBER_ROLE.ADMIN;
+  const canCreateRelease =
+    role === PROJECT_MEMBER_ROLE.OWNER || role === PROJECT_MEMBER_ROLE.ADMIN;
 
   const latestRelease = releases?.[0];
 
   return (
     <ProjectDataProvider project={mod} members={members}>
-      <ProjectHeader
-        project={mod}
-        latestRelease={latestRelease}
-        showSettings={canViewSettings}
-      />
+      <ProjectHeader project={mod} showSettings={canViewSettings} />
       <div className="flex min-h-screen gap-10">
         <div className="flex min-w-0 flex-1 flex-col gap-6">{children}</div>
         <aside className="w-80 shrink-0">
-          <div className="sticky top-62 flex flex-col gap-4">
+          <div className="sticky top-20 flex flex-col gap-4">
             <ProjectMembers members={members} />
             {latestRelease && <ProjectCompatibility release={latestRelease} />}
-            <ProjectReleases releases={releases} />
+            <ProjectReleases
+              projectId={mod.id}
+              projectSlug={mod.slug}
+              initialReleases={releases}
+              showCreateRelease={canCreateRelease}
+            />
           </div>
         </aside>
       </div>

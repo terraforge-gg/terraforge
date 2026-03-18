@@ -1,7 +1,7 @@
 "use client";
 import Image from "next/image";
 import { BoxIcon, DownloadIcon } from "lucide-react";
-import type { Project, ProjectRelease } from "@/lib/api/types";
+import type { Project } from "@/lib/api/types";
 import {
   Item,
   ItemContent,
@@ -10,30 +10,37 @@ import {
   ItemTitle,
 } from "@/components/ui/item";
 import { Separator } from "@/components/ui/separator";
-import { Button } from "../ui/button";
-import { toast } from "sonner";
 import Link from "../link";
+import DownloadReleaseButton from "./download-release-button";
+import { getProjectReleasesQueryOptions } from "@/lib/api/query-options/project-release";
+import { useQuery } from "@tanstack/react-query";
+import { Spinner } from "@/components/ui/spinner";
 
 type ProjecInfo = Pick<
   Project,
   "name" | "slug" | "summary" | "iconUrl" | "downloads"
 >;
-type ProjectReleaseInfo = Pick<ProjectRelease, "versionNumber" | "fileUrl">;
 
 type ProjectHeaderProps = {
-  latestVersionDownloadLink?: string;
   project: ProjecInfo;
-  latestRelease?: ProjectReleaseInfo;
   showSettings?: boolean;
 };
 
 const ProjectHeader = ({ project, showSettings }: ProjectHeaderProps) => {
   const { name, summary, iconUrl, downloads } = project;
 
+  const { data, isPending } = useQuery(
+    getProjectReleasesQueryOptions({
+      projectSlug: project.slug,
+    }),
+  );
+
+  const latestRelease = data?.[0];
+
   const iconSize = "w-24 h-24";
 
   return (
-    <header className="sticky top-12 flex w-full flex-col gap-6 bg-background pt-4 pb-10">
+    <header className="flex w-full flex-col gap-6 pt-4 pb-6">
       <Item className="px-0">
         <>
           <ItemMedia variant="image" className={iconSize}>
@@ -52,8 +59,16 @@ const ProjectHeader = ({ project, showSettings }: ProjectHeaderProps) => {
                 <span>{summary}</span>
                 <div className="flex items-center gap-2">
                   <div className="flex items-center gap-2">
-                    <DownloadIcon size={16} />
-                    {downloads}
+                    <>
+                      {isPending ? (
+                        <Spinner />
+                      ) : latestRelease ? (
+                        <>
+                          <DownloadIcon size={16} />
+                          {downloads}{" "}
+                        </>
+                      ) : null}
+                    </>
                   </div>
                   {/* <Separator orientation="vertical" />
                   <Badge variant="outline">DLC</Badge> */}
@@ -61,17 +76,16 @@ const ProjectHeader = ({ project, showSettings }: ProjectHeaderProps) => {
               </div>
             </ItemDescription>
           </ItemContent>
-          <ItemContent className="flex-none text-center">
-            <ItemDescription>
-              <Button
-                size="lg"
-                onClick={() => toast.info("not yet implemented")}
-              >
-                <DownloadIcon />
-                download
-              </Button>
-            </ItemDescription>
-          </ItemContent>
+          {latestRelease && (
+            <ItemContent className="flex-none text-center">
+              <ItemDescription>
+                <DownloadReleaseButton
+                  fileUrl={latestRelease.fileUrl}
+                  size="icon-lg"
+                />
+              </ItemDescription>
+            </ItemContent>
+          )}
         </>
       </Item>
       <div>

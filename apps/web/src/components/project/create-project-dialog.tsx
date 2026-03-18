@@ -7,7 +7,10 @@ import {
   DialogTrigger,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { createProjectSchema } from "@/lib/api/models/project/create";
+import {
+  createProjectSchema,
+  PROJECT_SUMMARY_MAX_LENGTH,
+} from "@/lib/api/models/project/create";
 import z from "zod";
 import { useRouter } from "next/navigation";
 import { useForm } from "@tanstack/react-form";
@@ -19,12 +22,12 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field";
-import { Textarea } from "@/components/ui/textarea";
 import {
   InputGroup,
   InputGroupAddon,
   InputGroupInput,
   InputGroupText,
+  InputGroupTextarea,
 } from "@/components/ui/input-group";
 import { env } from "@/env";
 import api from "@/lib/api/api";
@@ -55,8 +58,7 @@ const CreateProjectDialog = () => {
   const { mutate: createProject, isPending } = useMutation({
     mutationFn: api.project.create,
     onSuccess: (data) => {
-      form.reset();
-      router.push(`/mods/${data.slug}`);
+      router.push(`/mod/${data.slug}`);
     },
     onError: (error) => {
       toast.error(error.message);
@@ -72,7 +74,7 @@ const CreateProjectDialog = () => {
       </DialogTrigger>
       <DialogContent className="sm:max-w-sm">
         <DialogHeader>
-          <DialogTitle>Sign in</DialogTitle>
+          <DialogTitle>Create Project</DialogTitle>
         </DialogHeader>
         <form
           id="create-project-form"
@@ -100,6 +102,7 @@ const CreateProjectDialog = () => {
                         onChange={(e) => field.handleChange(e.target.value)}
                         aria-invalid={isInvalid}
                         autoComplete="off"
+                        disabled={isPending}
                       />
                     </InputGroup>
                     {isInvalid && (
@@ -134,6 +137,7 @@ const CreateProjectDialog = () => {
                         aria-invalid={isInvalid}
                         autoComplete="off"
                         className="pl-0!"
+                        disabled={isPending}
                       />
                     </InputGroup>
                     {isInvalid && (
@@ -153,15 +157,21 @@ const CreateProjectDialog = () => {
                 return (
                   <Field>
                     <FieldLabel htmlFor={field.name}>Summary</FieldLabel>
-                    <Textarea
-                      id={field.name}
-                      name={field.name}
-                      value={field.state.value ?? undefined}
-                      onBlur={field.handleBlur}
-                      onChange={(e) => field.handleChange(e.target.value)}
-                      aria-invalid={isInvalid}
-                      autoComplete="off"
-                    />
+                    <InputGroup>
+                      <InputGroupTextarea
+                        id={field.name}
+                        name={field.name}
+                        value={field.state.value ?? undefined}
+                        onBlur={field.handleBlur}
+                        onChange={(e) => field.handleChange(e.target.value)}
+                        aria-invalid={isInvalid}
+                        autoComplete="off"
+                        disabled={isPending}
+                      />
+                      <InputGroupAddon align="block-end">
+                        <InputGroupText className="ml-auto">{`${field.state.value?.length ?? 0}/${PROJECT_SUMMARY_MAX_LENGTH}`}</InputGroupText>
+                      </InputGroupAddon>
+                    </InputGroup>
                     {isInvalid && (
                       <FieldError errors={field.state.meta.errors} />
                     )}

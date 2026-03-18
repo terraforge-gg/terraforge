@@ -8,20 +8,53 @@ import {
 } from "@/components/ui/accordion";
 import { DownloadIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import CreateProjectReleaseDialog from "./create-release-dialog";
+import { useQuery } from "@tanstack/react-query";
+import { getProjectReleasesQueryOptions } from "@/lib/api/query-options/project-release";
+import { Spinner } from "../ui/spinner";
 
 type ProjectReleasesProps = {
-  releases: ProjectRelease[];
+  projectId: string;
+  projectSlug: string;
+  initialReleases: ProjectRelease[];
+  showCreateRelease?: boolean;
 };
 
-const ProjectReleases = ({ releases }: ProjectReleasesProps) => {
+const ProjectReleases = ({
+  projectId,
+  projectSlug,
+  initialReleases,
+  showCreateRelease,
+}: ProjectReleasesProps) => {
+  const { data: releases, isPending } = useQuery(
+    getProjectReleasesQueryOptions(
+      { projectSlug: projectSlug },
+      {
+        placeholderData: (previousData) => previousData,
+        initialData: initialReleases,
+      },
+    ),
+  );
+
   return (
     <Accordion type="single" collapsible defaultValue="releases">
       <AccordionItem value="releases">
         <AccordionTrigger className="tracking-widest">
           RELEASES
         </AccordionTrigger>
-        <AccordionContent>
-          {releases?.length > 0 ? (
+        <AccordionContent className="flex h-auto flex-col gap-2">
+          {showCreateRelease && (
+            <CreateProjectReleaseDialog
+              projectId={projectId}
+              projectSlug={projectSlug}
+            />
+          )}
+          {isPending && (
+            <div className="flex justify-center">
+              <Spinner />
+            </div>
+          )}
+          {releases && !isPending && releases.length > 0 ? (
             releases.map((x, i) => (
               <div
                 key={x.id}

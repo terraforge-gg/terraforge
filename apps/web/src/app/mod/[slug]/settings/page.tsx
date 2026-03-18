@@ -73,6 +73,7 @@ const ModSettingsPage = () => {
                   <AlertDialogAction
                     onClick={() => deleteProject(mod.id)}
                     disabled={isDeletePending}
+                    variant="destructive"
                   >
                     {isDeletePending && <Spinner />}
                     Confirm

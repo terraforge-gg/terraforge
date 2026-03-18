@@ -1,5 +1,6 @@
 "use client";
 import { useProjectData } from "@/components/project/project-data-provider";
+import { cn } from "@/lib/utils";
 import { notFound } from "next/navigation";
 
 const ModPage = () => {
@@ -9,11 +10,13 @@ const ModPage = () => {
     notFound();
   }
 
-  if (!mod.description) return null;
-
   return (
     <section className="flex flex-col gap-4">
-      <p className="text-muted-foreground">{mod.description}</p>
+      <p
+        className={cn("text-muted-foreground", mod.description ? "" : "italic")}
+      >
+        {mod.description ?? "no description"}
+      </p>
     </section>
   );
 };

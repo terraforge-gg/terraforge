@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
-import { Separator } from "./ui/separator";
+import { Separator } from "@/components/ui/separator";
 
 const Footer = () => {
   return (

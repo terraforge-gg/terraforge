@@ -7,12 +7,14 @@ export const env = createEnv({
     NEXT_PUBLIC_API_URL: z.url(),
     NEXT_PUBLIC_API_VERSION: z.string().startsWith("v"),
     NEXT_PUBLIC_AUTH_URL: z.url(),
+    NEXT_PUBLIC_CDN_URL: z.url(),
   },
   runtimeEnv: {
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
     NEXT_PUBLIC_API_VERSION: process.env.NEXT_PUBLIC_API_VERSION,
     NEXT_PUBLIC_AUTH_URL: process.env.NEXT_PUBLIC_AUTH_URL,
+    NEXT_PUBLIC_CDN_URL: process.env.NEXT_PUBLIC_CDN_URL,
   },
   emptyStringAsUndefined: true,
 });

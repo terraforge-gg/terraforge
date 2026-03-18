@@ -22,9 +22,14 @@ const ProjectMembers = ({ members }: ProjectMembersProps) => {
         </AccordionTrigger>
         <AccordionContent>
           {members.map((x) => (
-            <div key={x.userId} className="flex items-center justify-between">
+            <div key={x.userId} className="flex items-center gap-4">
               <Link href={`/user/${x.username}`}>{x.username}</Link>
-              <Badge variant="outline">{x.role}</Badge>
+              <Badge
+                variant="outline"
+                className="font-mono tracking-widest uppercase"
+              >
+                {x.role}
+              </Badge>
             </div>
           ))}
         </AccordionContent>

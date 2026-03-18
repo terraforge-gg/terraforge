@@ -8,7 +8,6 @@ import (
 	"log/slog"
 	"net/url"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/terraforge-gg/terraforge/internal/database"
@@ -20,7 +19,7 @@ import (
 )
 
 type CreateProjectReleaseDependencyParams struct {
-	VersionId        string
+	ReleaseId        string
 	ProjectId        string
 	MinVersionNumber *string
 	Type             string
@@ -42,12 +41,12 @@ type ProjectReleaseService interface {
 	GetReleasesByProjectId(ctx context.Context, id string, userId string) ([]models.ProjectRelease, error)
 }
 
-type projectVersionService struct {
+type projectReleaseService struct {
 	logger             *slog.Logger
 	cdnUrl             string
 	db                 *sql.DB
 	projectRepo        repository.ProjectRepository
-	projectVersionRepo repository.ProjectReleaseRepository
+	projectReleaseRepo repository.ProjectReleaseRepository
 	loaderVersionRepo  repository.LoaderVersionRepository
 	objectStoreService ObjectStoreService
 }
@@ -57,21 +56,21 @@ func NewProjectReleaseService(
 	cdnUrl string,
 	db *sql.DB,
 	projectRepo repository.ProjectRepository,
-	projectVersionRepo repository.ProjectReleaseRepository,
+	projectReleaseRepo repository.ProjectReleaseRepository,
 	loaderVersionRepo repository.LoaderVersionRepository,
 	objectStoreService ObjectStoreService) ProjectReleaseService {
-	return &projectVersionService{
+	return &projectReleaseService{
 		logger:             logger,
 		cdnUrl:             cdnUrl,
 		db:                 db,
 		projectRepo:        projectRepo,
-		projectVersionRepo: projectVersionRepo,
+		projectReleaseRepo: projectReleaseRepo,
 		loaderVersionRepo:  loaderVersionRepo,
 		objectStoreService: objectStoreService,
 	}
 }
 
-func (s *projectVersionService) GetReleaseByIdWithDependencies(ctx context.Context, projectIdentifier string, releaseId string, userId string) (*models.ProjectRelease, error) {
+func (s *projectReleaseService) GetReleaseByIdWithDependencies(ctx context.Context, projectIdentifier string, releaseId string, userId string) (*models.ProjectRelease, error) {
 	project, err := s.projectRepo.FindProjectByIdentifier(ctx, s.db, projectIdentifier, userId)
 
 	if err != nil {
@@ -82,20 +81,20 @@ func (s *projectVersionService) GetReleaseByIdWithDependencies(ctx context.Conte
 		return nil, custom_errors.ErrProjectNotFound
 	}
 
-	version, err := s.projectVersionRepo.FindReleaseByIdWithDependencies(ctx, s.db, releaseId)
+	release, err := s.projectReleaseRepo.FindReleaseByIdWithDependencies(ctx, s.db, releaseId)
 
 	if err != nil {
 		return nil, err
 	}
 
-	if version == nil {
+	if release == nil {
 		return nil, custom_errors.ErrProjectReleaseNotFound
 	}
 
-	return version, nil
+	return release, nil
 }
 
-func (s *projectVersionService) CreateRelease(ctx context.Context, projectIdentifier string, userId string, params CreateReleaseParams) (*models.ProjectRelease, error) {
+func (s *projectReleaseService) CreateRelease(ctx context.Context, projectIdentifier string, userId string, params CreateReleaseParams) (*models.ProjectRelease, error) {
 	tx, err := s.db.BeginTx(ctx, nil)
 
 	if err != nil {
@@ -174,7 +173,7 @@ func (s *projectVersionService) CreateRelease(ctx context.Context, projectIdenti
 		UpdatedAt: time.Now().UTC(),
 	}
 
-	destinationKey := fmt.Sprintf("users/%s/projects/%s/versions/%s/%s_%s.tmod", userId, project.Id, release.Id, project.Slug, release.VersionNumber)
+	destinationKey := fmt.Sprintf("users/%s/projects/%s/releases/%s/%s_%s.tmod", userId, project.Id, release.Id, project.Slug, release.VersionNumber)
 
 	newPath, err := s.objectStoreService.MoveFile(ctx, sourceKey, destinationKey)
 
@@ -185,7 +184,7 @@ func (s *projectVersionService) CreateRelease(ctx context.Context, projectIdenti
 
 	release.FileUrl = s.cdnUrl + newPath
 
-	err = s.projectVersionRepo.InsertRelease(ctx, tx, &release)
+	err = s.projectReleaseRepo.InsertRelease(ctx, tx, &release)
 
 	if err != nil {
 		switch {
@@ -198,7 +197,7 @@ func (s *projectVersionService) CreateRelease(ctx context.Context, projectIdenti
 	seen := make(map[string]bool)
 
 	for _, d := range params.Dependencies {
-		key := d.VersionId
+		key := d.ReleaseId
 
 		if !seen[key] {
 			seen[key] = true
@@ -225,7 +224,7 @@ func (s *projectVersionService) CreateRelease(ctx context.Context, projectIdenti
 		}
 
 		if dep.MinVersionNumber != nil {
-			min, err := s.projectVersionRepo.FindByProjectIdAndVersionNumber(ctx, tx, dep.ProjectId, *dep.MinVersionNumber)
+			min, err := s.projectReleaseRepo.FindByProjectIdAndVersionNumber(ctx, tx, dep.ProjectId, *dep.MinVersionNumber)
 
 			if err != nil {
 				return nil, err
@@ -249,7 +248,7 @@ func (s *projectVersionService) CreateRelease(ctx context.Context, projectIdenti
 	}
 
 	if len(deps) > 0 {
-		err := s.projectVersionRepo.InsertDependencies(ctx, tx, deps)
+		err := s.projectReleaseRepo.InsertDependencies(ctx, tx, deps)
 
 		if err != nil {
 			return nil, err
@@ -269,7 +268,7 @@ func (s *projectVersionService) CreateRelease(ctx context.Context, projectIdenti
 	return &release, nil
 }
 
-func (s *projectVersionService) GenerateProjectReleasePresignedPutUrl(ctx context.Context, projectIdentifier string, userId string, fileSize string) (string, error) {
+func (s *projectReleaseService) GenerateProjectReleasePresignedPutUrl(ctx context.Context, projectIdentifier string, userId string, fileSize string) (string, error) {
 	fileSizeBytes, err := strconv.ParseInt(fileSize, 10, 64)
 
 	if err != nil {
@@ -301,20 +300,19 @@ func (s *projectVersionService) GenerateProjectReleasePresignedPutUrl(ctx contex
 	}
 
 	uploadId := utils.NewUUID()
-	filename := strings.ToLower(project.Name) + ".tmod"
 	key := fmt.Sprintf("uploads/temp/%s/%s_%s.tmod", userId, uploadId, time.Now().UTC().Format(time.RFC3339))
 
-	url, err := s.objectStoreService.GeneratePresignedPutUrl(ctx, key, "application/octet-stream", filename, fileSizeBytes)
+	url, err := s.objectStoreService.GeneratePresignedPutUrl(ctx, key, "application/octet-stream", fileSizeBytes)
 
 	if err != nil {
-		s.logger.Error("Failed to generate project version presigned url.", "Error:", err)
+		s.logger.Error("Failed to generate project release presigned url.", "Error:", err)
 		return "", err
 	}
 
 	return url, err
 }
 
-func (s *projectVersionService) GetReleasesByProjectId(ctx context.Context, projectIdentifier string, userId string) ([]models.ProjectRelease, error) {
+func (s *projectReleaseService) GetReleasesByProjectId(ctx context.Context, projectIdentifier string, userId string) ([]models.ProjectRelease, error) {
 	project, err := s.projectRepo.FindProjectByIdentifier(ctx, s.db, projectIdentifier, userId)
 
 	if err != nil {
@@ -325,11 +323,11 @@ func (s *projectVersionService) GetReleasesByProjectId(ctx context.Context, proj
 		return nil, custom_errors.ErrProjectNotFound
 	}
 
-	versions, err := s.projectVersionRepo.FindReleasesByProjectIdWithLoaderVersion(ctx, s.db, project.Id)
+	releases, err := s.projectReleaseRepo.FindReleasesByProjectIdWithLoaderVersion(ctx, s.db, project.Id)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return versions, nil
+	return releases, nil
 }

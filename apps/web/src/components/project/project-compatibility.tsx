@@ -6,6 +6,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { Badge } from "@/components/ui/badge";
 
 type ProjectCompatibilityProps = {
   release: ProjectRelease;
@@ -19,7 +20,7 @@ const ProjectCompatibility = ({ release }: ProjectCompatibilityProps) => {
           COMPATIBILITY
         </AccordionTrigger>
         <AccordionContent>
-          <span>{release.loaderVersion.gameVersion}</span>
+          <Badge variant="outline">{release.loaderVersion.gameVersion}</Badge>
         </AccordionContent>
       </AccordionItem>
     </Accordion>

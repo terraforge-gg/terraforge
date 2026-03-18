@@ -22,9 +22,10 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { updateProjectSchema } from "@/lib/api/models/project/update";
 import type { UpdateProjectParams } from "@/lib/api/models/project/update";
-import { Button } from "../ui/button";
+import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { env } from "@/env";
+import { PROJECT_SUMMARY_MAX_LENGTH } from "@/lib/api/models/project/create";
 
 type UpdateProjectFormProps = {
   project: Project;
@@ -143,7 +144,7 @@ const UpdateProjectForm = ({ project }: UpdateProjectFormProps) => {
                           autoComplete="off"
                         />
                         <InputGroupAddon align="block-end">
-                          <InputGroupText className="ml-auto">{`${field.state.value?.length ?? 0}/120`}</InputGroupText>
+                          <InputGroupText className="ml-auto">{`${field.state.value?.length ?? 0}/${PROJECT_SUMMARY_MAX_LENGTH}`}</InputGroupText>
                         </InputGroupAddon>
                       </InputGroup>
                       {isInvalid && (
@@ -186,7 +187,7 @@ const UpdateProjectForm = ({ project }: UpdateProjectFormProps) => {
                 }}
               />
             </FieldGroup>
-            <Field className="w-32">
+            <Field className="ml-auto w-32">
               <Button
                 type="submit"
                 disabled={isDefaultValue || isUpdatePending}

@@ -2,6 +2,7 @@ import z from "zod";
 
 export const PROJECT_NAME_MIN_LENGTH = 3;
 export const PROJECT_NAME_MAX_LENGTH = 100;
+export const PROJECT_SUMMARY_MAX_LENGTH = 120;
 
 export const slugSchema = z
   .string()
@@ -25,7 +26,12 @@ export const createProjectSchema = z.object({
       error: `Name must be less than ${PROJECT_NAME_MAX_LENGTH} characters`,
     }),
   slug: slugSchema,
-  summary: z.string().optional(),
+  summary: z
+    .string()
+    .max(PROJECT_SUMMARY_MAX_LENGTH, {
+      error: `Summary must be less than ${PROJECT_SUMMARY_MAX_LENGTH} characters`,
+    })
+    .optional(),
   organisationId: z.uuidv7().optional(),
 });
 

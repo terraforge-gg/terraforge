@@ -12,7 +12,7 @@ import (
 )
 
 type ObjectStoreService interface {
-	GeneratePresignedPutUrl(ctx context.Context, key string, contentType string, filename string, fileSize int64) (string, error)
+	GeneratePresignedPutUrl(ctx context.Context, key string, contentType string, fileSize int64) (string, error)
 	GetFileMetadate(ctx context.Context, key string) (*metadata, error)
 	MoveFile(ctx context.Context, sourceKey string, destinationKey string) (string, error)
 }
@@ -29,15 +29,14 @@ func NewObjectStoreService(client *s3.Client, assetsBucketName string) ObjectSto
 	}
 }
 
-func (s *objectStoreService) GeneratePresignedPutUrl(ctx context.Context, key string, contentType string, filename string, fileSize int64) (string, error) {
+func (s *objectStoreService) GeneratePresignedPutUrl(ctx context.Context, key string, contentType string, fileSize int64) (string, error) {
 	presignClient := s3.NewPresignClient(s.client)
 
 	put, err := presignClient.PresignPutObject(ctx, &s3.PutObjectInput{
-		Bucket:             aws.String(s.assetsBucketName),
-		Key:                aws.String(key),
-		ContentType:        aws.String(contentType),
-		ContentLength:      aws.Int64(fileSize),
-		ContentDisposition: aws.String(fmt.Sprintf(`attachment; filename="%s"`, filename)),
+		Bucket:        aws.String(s.assetsBucketName),
+		Key:           aws.String(key),
+		ContentType:   aws.String(contentType),
+		ContentLength: aws.Int64(fileSize),
 	}, func(opts *s3.PresignOptions) {
 		opts.Expires = 15 * time.Minute
 	})

@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/terraforge-gg/terraforge/internal/cache"
 	"github.com/terraforge-gg/terraforge/internal/database"
 	custom_errors "github.com/terraforge-gg/terraforge/internal/errors"
 	"github.com/terraforge-gg/terraforge/internal/models"
@@ -17,20 +18,21 @@ import (
 type ProjectService interface {
 	CreateUserProject(ctx context.Context, params CreateUserProjectParams) (*models.Project, error)
 	GetProjectByIdentifier(ctx context.Context, params GetProjectByIdentifierParams) (*models.Project, error)
-	GetProjectMembers(ctx context.Context, params GetProjectByIdentifierParams) ([]models.ProjectMember, error)
+	GetProjectMembers(ctx context.Context, params GetProjectMembersParams) ([]models.ProjectMember, error)
 	UpdateProject(ctx context.Context, params UpdateProjectParams) (*models.Project, error)
 	DeleteProject(ctx context.Context, params DeleteProjectParams) error
 }
 
 type projectService struct {
-	logger      *slog.Logger
-	db          *sql.DB
-	projectRepo repository.ProjectRepository
-	searchRepo  repository.SearchRepository
+	logger       *slog.Logger
+	db           *sql.DB
+	projectRepo  repository.ProjectRepository
+	searchRepo   repository.SearchRepository
+	projectCache cache.ProjectCache
 }
 
-func NewProjectService(logger *slog.Logger, db *sql.DB, projectRepo repository.ProjectRepository, searchRepo repository.SearchRepository) ProjectService {
-	return &projectService{logger: logger, db: db, projectRepo: projectRepo, searchRepo: searchRepo}
+func NewProjectService(logger *slog.Logger, db *sql.DB, projectRepo repository.ProjectRepository, searchRepo repository.SearchRepository, projectCache cache.ProjectCache) ProjectService {
+	return &projectService{logger: logger, db: db, projectRepo: projectRepo, searchRepo: searchRepo, projectCache: projectCache}
 }
 
 type CreateUserProjectParams struct {
@@ -109,7 +111,17 @@ type GetProjectByIdentifierParams struct {
 }
 
 func (s *projectService) GetProjectByIdentifier(ctx context.Context, params GetProjectByIdentifierParams) (*models.Project, error) {
-	project, err := s.projectRepo.FindProjectByIdentifier(ctx, s.db, params.Identifier, params.UserId)
+	project, err := s.projectCache.GetProject(ctx, params.Identifier)
+
+	if err == nil {
+		return project, nil
+	}
+
+	if !errors.Is(err, cache.ErrCacheMiss) {
+		return nil, err
+	}
+
+	project, err = s.projectRepo.FindProjectByIdentifier(ctx, s.db, params.Identifier, params.UserId)
 
 	if err != nil {
 		return nil, err
@@ -119,15 +131,36 @@ func (s *projectService) GetProjectByIdentifier(ctx context.Context, params GetP
 		return nil, custom_errors.ErrProjectNotFound
 	}
 
+	if project.Status == models.ProjectStatusApproved {
+		_ = s.projectCache.SetProject(ctx, project, 5*time.Minute)
+	}
+
 	return project, nil
 }
 
 type GetProjectMembersParams struct {
 	Identifier string
-	UserId     *string
+	UserId     string
 }
 
-func (s *projectService) GetProjectMembers(ctx context.Context, params GetProjectByIdentifierParams) ([]models.ProjectMember, error) {
+func (s *projectService) GetProjectMembers(ctx context.Context, params GetProjectMembersParams) ([]models.ProjectMember, error) {
+	project, err := s.GetProjectByIdentifier(ctx, GetProjectByIdentifierParams{
+		Identifier: params.Identifier,
+		UserId:     params.UserId,
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	if project == nil {
+		return nil, custom_errors.ErrProjectNotFound
+	}
+
+	if projectMembers, err := s.projectCache.GetProjectMembers(ctx, params.Identifier); err == nil {
+		return projectMembers, nil
+	}
+
 	members, err := s.projectRepo.FindProjectMembersByProjectIdentifier(ctx, s.db, params.Identifier, params.UserId)
 
 	if err != nil {
@@ -136,6 +169,10 @@ func (s *projectService) GetProjectMembers(ctx context.Context, params GetProjec
 
 	if members == nil {
 		return nil, custom_errors.ErrProjectNotFound
+	}
+
+	if project.Status == models.ProjectStatusApproved {
+		_ = s.projectCache.SetProjectMembers(ctx, project, members, 5*time.Minute)
 	}
 
 	return members, nil
@@ -227,6 +264,10 @@ func (s *projectService) UpdateProject(ctx context.Context, params UpdateProject
 		panic(err)
 	}
 
+	if project.Status == models.ProjectStatusApproved {
+		err = s.projectCache.SetProject(ctx, project, 5*time.Minute)
+	}
+
 	go func() {
 		err = s.searchRepo.UpdateProject(context.Background(), project)
 		if err != nil {
@@ -282,6 +323,12 @@ func (s *projectService) DeleteProject(ctx context.Context, params DeleteProject
 
 	if err != nil {
 		panic(err)
+	}
+
+	err = s.projectCache.DeleteProject(ctx, project.Id)
+
+	if err != nil {
+		s.logger.Warn("Failed to delete project from cache", "Error", err)
 	}
 
 	go func() {

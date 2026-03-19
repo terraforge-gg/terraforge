@@ -13,10 +13,12 @@ import (
 	"github.com/labstack/echo/v5"
 	"github.com/labstack/echo/v5/middleware"
 	"github.com/terraforge-gg/terraforge/internal/auth"
+	"github.com/terraforge-gg/terraforge/internal/cache"
 	"github.com/terraforge-gg/terraforge/internal/config"
 	"github.com/terraforge-gg/terraforge/internal/handler"
 	"github.com/terraforge-gg/terraforge/internal/lib/aws"
 	"github.com/terraforge-gg/terraforge/internal/lib/meilisearch"
+	"github.com/terraforge-gg/terraforge/internal/lib/redis"
 	custom_middleware "github.com/terraforge-gg/terraforge/internal/middleware"
 	"github.com/terraforge-gg/terraforge/internal/repository"
 	"github.com/terraforge-gg/terraforge/internal/seed"
@@ -42,6 +44,14 @@ func NewServer(cfg *config.Config, logger *slog.Logger, db *sql.DB) (*echo.Echo,
 	s3_client := aws.NewS3Client(cfg, aws_config)
 	objectStoreService := service.NewObjectStoreService(s3_client, cfg.S3AssetsBucketName)
 
+	redisClient, err := redis.NewRedisClient(cfg.RedisUrl, cfg.RedisPassword)
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to create redis client: %w", err)
+	}
+
+	projectCache := cache.NewProjectCache(redisClient)
+
 	meiliClient := meilisearch.NewMeiliSearch(cfg.MeiliSearchHostUrl, cfg.MeiliSearchMasterKey)
 	meiliSearchRepo := repository.NewMeiliSearchRepository(logger, meiliClient)
 	searchService := service.NewSearchService(logger, meiliSearchRepo)
@@ -53,7 +63,7 @@ func NewServer(cfg *config.Config, logger *slog.Logger, db *sql.DB) (*echo.Echo,
 	loaderVersionHandler := handler.NewLoaderVersionHandler(cfg, logger, loaderVersionService)
 
 	projectRepo := repository.NewProjectRepository()
-	projectService := service.NewProjectService(logger, db, projectRepo, meiliSearchRepo)
+	projectService := service.NewProjectService(logger, db, projectRepo, meiliSearchRepo, projectCache)
 	projectHandler := handler.NewProjectHandler(cfg, logger, projectService, searchService)
 
 	projectReleasenRepo := repository.NewProjectReleaseRepository()
@@ -87,6 +97,11 @@ func NewServer(cfg *config.Config, logger *slog.Logger, db *sql.DB) (*echo.Echo,
 			Name:    "auth",
 			Timeout: 2 * time.Second,
 			Check:   authHealthCheckService.Health,
+		}),
+		health.WithCheck(health.Check{
+			Name:    "redis",
+			Timeout: 2 * time.Second,
+			Check:   redisClient.Health,
 		}),
 	)
 

@@ -53,8 +53,24 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+  
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes --requirepass kwaurLIUECobUrfTiIiH7tBzhd/6MciQ5mcnyn0TjIU=
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "kwaurLIUECobUrfTiIiH7tBzhd/6MciQ5mcnyn0TjIU=", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 volumes:
   postgres_data:
   meilisearch_data:
   localstack_data:
+  redis_data:

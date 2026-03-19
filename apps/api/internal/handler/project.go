@@ -66,7 +66,7 @@ func (h *ProjectHandler) GetProjectMembers(c *echo.Context) error {
 	identifier := c.Param("identifier")
 	userId, _ := utils.GetUserId(c)
 
-	members, err := h.projectService.GetProjectMembers(ctx, service.GetProjectByIdentifierParams{
+	members, err := h.projectService.GetProjectMembers(ctx, service.GetProjectMembersParams{
 		Identifier: identifier,
 		UserId:     userId,
 	})

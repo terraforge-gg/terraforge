@@ -21,6 +21,8 @@ type Config struct {
 	S3AssetsBucketName   string
 	MeiliSearchHostUrl   string
 	MeiliSearchMasterKey string
+	RedisUrl             string
+	RedisPassword        string
 }
 
 func Load() *Config {
@@ -41,5 +43,7 @@ func Load() *Config {
 		S3AssetsBucketName:   os.Getenv("S3_ASSETS_BUCKET_NAME"),
 		MeiliSearchHostUrl:   os.Getenv("MEILISEARCH_HOST_URL"),
 		MeiliSearchMasterKey: os.Getenv("MEILISEARCH_MASTER_KEY"),
+		RedisUrl:             os.Getenv("REDIS_URL"),
+		RedisPassword:        os.Getenv("REDIS_PASSWORD"),
 	}
 }

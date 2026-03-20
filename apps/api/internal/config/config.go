@@ -13,12 +13,12 @@ type Config struct {
 	AuthUrl              string
 	DatabaseUrl          string
 	SeedDb               bool
-	AwsRegion            string
-	AwsAccessKeyId       string
-	AwsSecretAccessKey   string
-	AwsSessionToken      string
+	CfRegion             string
+	CfAccountId          string
+	CfAccessKeyId        string
+	CfSecretAccessKey    string
 	CdnUrl               string
-	S3AssetsBucketName   string
+	R2Bucket             string
 	MeiliSearchHostUrl   string
 	MeiliSearchMasterKey string
 	RedisUrl             string
@@ -35,12 +35,12 @@ func Load() *Config {
 		AuthUrl:              os.Getenv("AUTH_URL"),
 		DatabaseUrl:          os.Getenv("DATABASE_URL"),
 		SeedDb:               os.Getenv("SEED_DB") == "true",
-		AwsRegion:            os.Getenv("AWS_REGION"),
-		AwsAccessKeyId:       os.Getenv("AWS_ACCESS_KEY_ID"),
-		AwsSecretAccessKey:   os.Getenv("AWS_SECRET_ACCESS_KEY"),
-		AwsSessionToken:      os.Getenv("AWS_SESSION_TOKEN"),
+		CfRegion:             os.Getenv("CF_REGION"),
+		CfAccountId:          os.Getenv("CF_ACCOUNT_ID"),
+		CfAccessKeyId:        os.Getenv("CF_ACCESS_KEY_ID"),
+		CfSecretAccessKey:    os.Getenv("CF_SECRET_ACCESS_KEY"),
 		CdnUrl:               os.Getenv("CDN_URL"),
-		S3AssetsBucketName:   os.Getenv("S3_ASSETS_BUCKET_NAME"),
+		R2Bucket:             os.Getenv("R2_BUCKET"),
 		MeiliSearchHostUrl:   os.Getenv("MEILISEARCH_HOST_URL"),
 		MeiliSearchMasterKey: os.Getenv("MEILISEARCH_MASTER_KEY"),
 		RedisUrl:             os.Getenv("REDIS_URL"),

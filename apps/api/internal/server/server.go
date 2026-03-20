@@ -42,7 +42,7 @@ func NewServer(cfg *config.Config, logger *slog.Logger, db *sql.DB) (*echo.Echo,
 	}
 
 	s3_client := aws.NewS3Client(cfg, aws_config)
-	objectStoreService := service.NewObjectStoreService(s3_client, cfg.S3AssetsBucketName)
+	objectStoreService := service.NewObjectStoreService(s3_client, cfg.R2Bucket)
 
 	redisClient, err := redis.NewRedisClient(cfg.RedisUrl, cfg.RedisPassword)
 

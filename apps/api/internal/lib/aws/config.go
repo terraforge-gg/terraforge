@@ -12,13 +12,17 @@ import (
 func NewAwsConfig(cfg *config.Config) (*aws.Config, error) {
 	ctx := context.Background()
 	aws_cfg, err := aws_config.LoadDefaultConfig(ctx,
-		aws_config.WithRegion(cfg.AwsRegion),
+		aws_config.WithRegion(cfg.CfRegion),
 		aws_config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(
-			cfg.AwsAccessKeyId,
-			cfg.AwsSecretAccessKey,
-			cfg.AwsSessionToken,
+			cfg.CfAccessKeyId,
+			cfg.CfSecretAccessKey,
+			"",
 		)),
 	)
+
+	if err != nil {
+		return nil, err
+	}
 
 	return &aws_cfg, err
 }

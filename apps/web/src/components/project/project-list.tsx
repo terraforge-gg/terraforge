@@ -3,7 +3,7 @@ import ProjectCard from "./project-card";
 import type { Project } from "@/lib/api/types";
 import { ItemGroup } from "@/components/ui/item";
 import { Empty, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Spinner } from "@/components/ui/spinner";
 
 interface ProjectListProps {
   projects?: Project[];
@@ -12,11 +12,11 @@ interface ProjectListProps {
 
 const ProjectList = ({ projects, loading }: ProjectListProps) => {
   if (loading) {
-    return <Skeleton className="h-96 w-full" />;
+    return <Spinner className="size-8" />;
   }
 
   return (
-    <div className="w-full py-4">
+    <div className="w-full">
       {projects && projects.length ? (
         <ItemGroup className="gap-4">
           {projects.map((x) => (

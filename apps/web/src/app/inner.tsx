@@ -1,6 +1,7 @@
 "use client";
 import ProjectList from "@/components/project/project-list";
 import ProjectSearch from "@/components/project/project-search";
+import { Button } from "@/components/ui/button";
 import { projectSearchQueryOptions } from "@/lib/api/query-options/project";
 import { ProjectSearch as ProjectSearchResult } from "@/lib/api/types";
 import { useQuery } from "@tanstack/react-query";
@@ -37,17 +38,31 @@ const Inner = ({ initialData }: SearchInnerProps) => {
 
   return (
     <>
-      <ProjectSearch
-        total={data?.totalHits}
-        query={_query ?? ""}
-        setQuery={setQuery}
-        clearSearchParams={() => {
-          setQuery(null);
-          setPage(null);
-          setPerPage(null);
-        }}
-      />
+      <div className="w-80 sm:w-150">
+        <ProjectSearch
+          total={data?.totalHits}
+          query={_query ?? ""}
+          setQuery={setQuery}
+          clearSearchParams={() => {
+            setQuery(null);
+            setPage(null);
+            setPerPage(null);
+          }}
+        />
+      </div>
       <ProjectList projects={data?.data} loading={isFetching} />
+      <div className="flex w-full justify-end gap-2">
+        {page > 0 && (
+          <Button variant="outline" onClick={() => setPage((prev) => prev - 1)}>
+            Previous
+          </Button>
+        )}
+        {perPage < (data?.totalHits || 0) / perPage && (
+          <Button variant="outline" onClick={() => setPage((prev) => prev + 1)}>
+            Next
+          </Button>
+        )}
+      </div>
     </>
   );
 };

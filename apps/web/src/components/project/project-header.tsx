@@ -26,6 +26,8 @@ type ProjectHeaderProps = {
   showSettings?: boolean;
 };
 
+const iconSize = "w-24 h-24";
+
 const ProjectHeader = ({ project, showSettings }: ProjectHeaderProps) => {
   const { name, summary, iconUrl, downloads } = project;
 
@@ -36,8 +38,6 @@ const ProjectHeader = ({ project, showSettings }: ProjectHeaderProps) => {
   );
 
   const latestRelease = data?.[0];
-
-  const iconSize = "w-24 h-24";
 
   return (
     <header className="flex w-full flex-col gap-6 pt-4 pb-6">

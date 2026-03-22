@@ -1,3 +1,5 @@
+"use client";
+import Image from "next/image";
 import { BoxIcon, Download, RefreshCcw } from "lucide-react";
 import millify from "millify";
 import { format, formatDistance } from "date-fns";
@@ -22,9 +24,11 @@ type MinimalProject = Omit<
   "id" | "description" | "status" | "createdAt" | "organisationId"
 >;
 
-interface ProjectCardProps extends MinimalProject {
-  ownerName?: string;
-}
+type ProjectCardProps = {
+  username?: string;
+} & MinimalProject;
+
+const iconSize = "w-24 h-24";
 
 const ProjectCard = ({
   slug,
@@ -33,41 +37,41 @@ const ProjectCard = ({
   summary,
   downloads,
   updatedAt,
-  ownerName,
+  username,
 }: ProjectCardProps) => {
   return (
     <Item variant="muted" className="items-start p-4">
-      <ItemMedia variant="image" className="h-24 w-24">
+      <ItemMedia variant="image" className={iconSize}>
         {iconUrl ? (
-          <img src={iconUrl} alt={name} />
+          <Image src={iconUrl} alt={name} fill />
         ) : (
-          <BoxIcon className="h-24 w-24" />
+          <BoxIcon className={iconSize} />
         )}
       </ItemMedia>
       <ItemContent>
-        <ItemTitle className="line-clamp-1 text-lg font-bold md:text-2xl">
+        <ItemTitle className="line-clamp-1 text-lg font-bold break-normal text-ellipsis md:text-2xl">
           <Link href={`/mod/${slug}`} className="hover:underline">
             {name}
           </Link>
-          {ownerName && " - "}
-          {ownerName && (
+          {username && " - "}
+          {username && (
             <Link
-              href={`/user/${ownerName}`}
+              href={`/user/${username}`}
               className="text-base font-bold text-primary hover:underline"
             >
-              {ownerName}
+              {username}
             </Link>
           )}
         </ItemTitle>
-        <ItemDescription className="break-normal text-ellipsis">
+        <ItemDescription className="break-all text-ellipsis">
           {summary}
         </ItemDescription>
       </ItemContent>
-      <ItemActions className="flex flex-row items-start sm:flex-col">
+      <ItemActions className="flex flex-col items-start">
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger className="hover:cursor-default">
-              <div className="flex items-center gap-2 text-lg">
+              <div className="flex items-center gap-2 text-xs md:text-lg">
                 <Download size={20} />
                 <div className="flex gap-1">
                   <span className="font-bold">{millify(downloads)}</span>{" "}
@@ -84,7 +88,7 @@ const ProjectCard = ({
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger className="hover:cursor-default">
-              <div className="flex items-center gap-2 text-lg">
+              <div className="flex items-center gap-2 text-xs md:text-lg">
                 <RefreshCcw size={20} />
                 {formatDistance(updatedAt, new Date(), { addSuffix: true })}
               </div>

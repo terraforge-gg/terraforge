@@ -25,7 +25,7 @@ const ProjectSearch = ({
   total,
 }: ProjectSearchProps) => {
   return (
-    <InputGroup className="h-12 w-150">
+    <InputGroup className="h-12">
       <InputGroupInput
         placeholder={total ? "Search mods..." : "No mods :("}
         value={query ?? ""}

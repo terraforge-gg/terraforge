@@ -21,7 +21,7 @@ const Home = async ({ searchParams }: PageProps) => {
 
   return (
     <div className="flex min-h-screen flex-col items-center gap-10">
-      <h1 className="text-4xl">Find your favourite mods</h1>
+      <h1 className="text-3xl md:text-4xl">Find your favourite mods</h1>
       <Inner initialData={result} />
     </div>
   );

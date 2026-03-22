@@ -50,7 +50,9 @@ const ProjectReleases = ({
             ))}
           </div>
         ) : (
-          <div>NO RELEASES</div>
+          <div className="font-mono text-sm text-muted-foreground">
+            NO RELEASES
+          </div>
         )}
       </div>
     </div>

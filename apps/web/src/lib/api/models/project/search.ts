@@ -18,7 +18,7 @@ export type SearchProjectSchema = z.infer<typeof searchProjectSchema>;
 export type SearchProjectParams =
   | {
       query?: string;
-      page?: number;
-      perPage?: number;
+      offset?: number;
+      limit?: number;
     }
   | undefined;

@@ -6,6 +6,7 @@ import Footer from "@/components/footer";
 import Navbar from "@/components/navbar";
 import Providers from "@/components/providers/providers";
 import { Toaster } from "@/components/ui/sonner";
+import { NuqsAdapter } from "nuqs/adapters/next/app";
 
 const fontSans = Geist({
   subsets: ["latin"],
@@ -38,14 +39,16 @@ export default function RootLayout({
       )}
     >
       <body>
-        <Providers>
-          <Navbar />
-          <main className="container mx-auto min-h-screen max-w-6xl px-4">
-            <div className="py-12">{children}</div>
-          </main>
-          <Toaster richColors />
-          <Footer />
-        </Providers>
+        <NuqsAdapter>
+          <Providers>
+            <Navbar />
+            <main className="container mx-auto min-h-screen max-w-6xl px-4">
+              <div className="py-12">{children}</div>
+            </main>
+            <Toaster richColors />
+            <Footer />
+          </Providers>
+        </NuqsAdapter>
       </body>
     </html>
   );

@@ -143,6 +143,7 @@ func NewServer(cfg *config.Config, logger *slog.Logger, db *sql.DB) (*echo.Echo,
 	v1.GET("/loader-versions", loaderVersionHandler.GetLoaderVersions)
 
 	v1.POST("/projects", projectHandler.CreateProject, authMiddleware)
+	v1.GET("/projects", projectHandler.SearchProjects)
 	v1.GET("/projects/:identifier", projectHandler.GetProjectByIdentifier, authOptionalMiddleware)
 	v1.GET("/projects/:identifier/members", projectHandler.GetProjectMembers, authOptionalMiddleware)
 	v1.PATCH("/projects/:identifier", projectHandler.UpdateProject, authMiddleware)

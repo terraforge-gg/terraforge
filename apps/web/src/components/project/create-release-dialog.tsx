@@ -103,35 +103,35 @@ const CreateProjectReleaseDialog = ({
     ),
   );
 
-  const { mutate: uploadProjectVersionFile } =
-    useMutation<void, Error, { presignedPutUrl: string; file: File }>({
-      mutationKey: ["upload-project-version", projectId],
-      mutationFn: async ({ presignedPutUrl: url, file: f }) => {
-        await fetch(url, {
-          method: "PUT",
-          body: f,
-          headers: {
-            "content-type": "application/octet-stream",
-            "content-length": `${file?.size ?? 0}`,
-          },
-        });
-      },
-      onSuccess: () => {
-        setFile(undefined);
-        if (presignedPutUrl) {
-          const newIconUrl = new URL(presignedPutUrl);
-          form.setFieldValue(
-            "fileUrl",
-            newIconUrl.origin + newIconUrl.pathname,
-          );
-          toast.success("File uploaded");
-        }
-      },
-      onError: () => {
-        toast.error("Something went wrong");
-        setFile(undefined);
-      },
-    });
+  const { mutate: uploadProjectVersionFile } = useMutation<
+    void,
+    Error,
+    { presignedPutUrl: string; file: File }
+  >({
+    mutationKey: ["upload-project-version", projectId],
+    mutationFn: async ({ presignedPutUrl: url, file: f }) => {
+      await fetch(url, {
+        method: "PUT",
+        body: f,
+        headers: {
+          "content-type": "application/octet-stream",
+          "content-length": `${file?.size ?? 0}`,
+        },
+      });
+    },
+    onSuccess: () => {
+      setFile(undefined);
+      if (presignedPutUrl) {
+        const newIconUrl = new URL(presignedPutUrl);
+        form.setFieldValue("fileUrl", newIconUrl.origin + newIconUrl.pathname);
+        toast.success("File uploaded");
+      }
+    },
+    onError: () => {
+      toast.error("Something went wrong");
+      setFile(undefined);
+    },
+  });
 
   useEffect(() => {
     if (!presignedPutUrl || !file) return;

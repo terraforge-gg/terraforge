@@ -29,8 +29,8 @@ func NewProjectRepository() ProjectRepository {
 
 func (r *projectRepository) InsertProject(ctx context.Context, q database.Querier, project *models.Project) error {
 	query := `INSERT INTO "project"
-		("id", "name", "slug", "summary", "type", "status", "createdAt", "updatedAt", "userId")
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9);`
+		("id", "name", "slug", "summary", "description", "iconUrl", "downloads", "type", "status", "createdAt", "updatedAt", "userId")
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12);`
 
 	_, err := q.ExecContext(
 		ctx,
@@ -39,6 +39,9 @@ func (r *projectRepository) InsertProject(ctx context.Context, q database.Querie
 		project.Name,
 		project.Slug,
 		project.Summary,
+		project.Description,
+		project.IconUrl,
+		project.Downloads,
 		project.Type,
 		project.Status,
 		project.CreatedAt,

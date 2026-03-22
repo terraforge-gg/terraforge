@@ -46,15 +46,18 @@ type CreateUserProjectParams struct {
 func (s *projectService) CreateUserProject(ctx context.Context, params CreateUserProjectParams) (*models.Project, error) {
 	now := time.Now().UTC()
 	project := &models.Project{
-		Id:        utils.NewUUID(),
-		Name:      params.Name,
-		Slug:      params.Slug,
-		Summary:   params.Summary,
-		Type:      params.Type,
-		Status:    models.ProjectStatusDraft,
-		CreatedAt: now,
-		UpdatedAt: now,
-		UserId:    params.UserId,
+		Id:          utils.NewUUID(),
+		Name:        params.Name,
+		Slug:        params.Slug,
+		Summary:     params.Summary,
+		Description: nil,
+		IconUrl:     nil,
+		Downloads:   0,
+		Type:        params.Type,
+		Status:      models.ProjectStatusDraft,
+		CreatedAt:   now,
+		UpdatedAt:   now,
+		UserId:      params.UserId,
 	}
 
 	tx, err := s.db.BeginTx(ctx, nil)
@@ -95,12 +98,14 @@ func (s *projectService) CreateUserProject(ctx context.Context, params CreateUse
 		return nil, err
 	}
 
+	if project.Status == models.ProjectStatusApproved {
 	go func() {
 		err = s.searchRepo.IndexProject(context.Background(), project)
 		if err != nil {
 			s.logger.Error("Failed to index project.", "Project: ", project, "Error: ", err)
 		}
 	}()
+	}
 
 	return project, nil
 }

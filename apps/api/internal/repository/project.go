@@ -19,6 +19,7 @@ type ProjectRepository interface {
 	FindProjectMemberByProjectIdAndUserId(ctx context.Context, q database.Querier, projectId string, userId string) (*models.ProjectMember, error)
 	UpdateProject(ctx context.Context, q database.Querier, project models.Project) error
 	DeleteProjectByIdentifier(ctx context.Context, q database.Querier, identifier string, deletedAt time.Time) error
+	FindProjectsByUserId(ctx context.Context, q database.Querier, userId string, status models.ProjectStatus) ([]models.Project, error)
 }
 
 type projectRepository struct{}
@@ -288,4 +289,66 @@ func (r *projectRepository) DeleteProjectByIdentifier(ctx context.Context, q dat
 	}
 
 	return nil
+}
+
+func (r *projectRepository) FindProjectsByUserId(ctx context.Context, q database.Querier, userId string, projectStatus models.ProjectStatus) ([]models.Project, error) {
+
+	query := `
+		SELECT 
+			id,
+			name,
+			slug,
+			summary,
+			description,
+			"iconUrl",
+			downloads,
+			type,
+			status,
+			"createdAt",
+			"updatedAt",
+			"deletedAt",
+			"userId"
+		FROM "active_project"
+		WHERE "userId" = $1 AND "status" = $2
+		ORDER BY "downloads" DESC, "updatedAt" DESC LIMIT 100;
+	`
+
+	rows, err := q.QueryContext(ctx, query, userId, projectStatus)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var projects []models.Project
+
+	for rows.Next() {
+		var p models.Project
+
+		err := rows.Scan(
+			&p.Id,
+			&p.Name,
+			&p.Slug,
+			&p.Summary,
+			&p.Description,
+			&p.IconUrl,
+			&p.Downloads,
+			&p.Type,
+			&p.Status,
+			&p.CreatedAt,
+			&p.UpdatedAt,
+			&p.DeletedAt,
+			&p.UserId,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		projects = append(projects, p)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return projects, nil
 }

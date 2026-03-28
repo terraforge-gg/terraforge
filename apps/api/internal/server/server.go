@@ -62,9 +62,13 @@ func NewServer(cfg *config.Config, logger *slog.Logger, db *sql.DB) (*echo.Echo,
 	loaderVersionService := service.NewLoaderVersionService(logger, db, loaderVersionRepo)
 	loaderVersionHandler := handler.NewLoaderVersionHandler(cfg, logger, loaderVersionService)
 
+	userRepository := repository.NewUserRepository()
+
 	projectRepo := repository.NewProjectRepository()
-	projectService := service.NewProjectService(logger, db, projectRepo, meiliSearchRepo, projectCache)
+	projectService := service.NewProjectService(logger, db, projectRepo, meiliSearchRepo, projectCache, userRepository)
 	projectHandler := handler.NewProjectHandler(cfg, logger, projectService, searchService)
+
+	userHandler := handler.NewUserHandler(cfg, logger, projectService)
 
 	projectReleasenRepo := repository.NewProjectReleaseRepository()
 	projectReleaseService := service.NewProjectReleaseService(logger, cfg.CdnUrl, db, projectRepo, projectReleasenRepo, loaderVersionRepo, objectStoreService)
@@ -141,6 +145,8 @@ func NewServer(cfg *config.Config, logger *slog.Logger, db *sql.DB) (*echo.Echo,
 
 	v1.GET("/loader-versions/:id", loaderVersionHandler.GetLoaderVersionById)
 	v1.GET("/loader-versions", loaderVersionHandler.GetLoaderVersions)
+
+	v1.GET("/users/:userIdentifier/projects", userHandler.GetProjectsByUserId, authOptionalMiddleware)
 
 	v1.POST("/projects", projectHandler.CreateProject, authMiddleware)
 	v1.GET("/projects", projectHandler.SearchProjects)

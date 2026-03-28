@@ -21,6 +21,7 @@ type ProjectService interface {
 	GetProjectMembers(ctx context.Context, params GetProjectMembersParams) ([]models.ProjectMember, error)
 	UpdateProject(ctx context.Context, params UpdateProjectParams) (*models.Project, error)
 	DeleteProject(ctx context.Context, params DeleteProjectParams) error
+	GetProjectsByUserId(ctx context.Context, params GetProjectsByUserIdParams) ([]models.Project, error)
 }
 
 type projectService struct {
@@ -29,18 +30,20 @@ type projectService struct {
 	projectRepo  repository.ProjectRepository
 	searchRepo   repository.SearchRepository
 	projectCache cache.ProjectCache
+	userRepo     repository.UserRepository
 }
 
-func NewProjectService(logger *slog.Logger, db *sql.DB, projectRepo repository.ProjectRepository, searchRepo repository.SearchRepository, projectCache cache.ProjectCache) ProjectService {
-	return &projectService{logger: logger, db: db, projectRepo: projectRepo, searchRepo: searchRepo, projectCache: projectCache}
+func NewProjectService(logger *slog.Logger, db *sql.DB, projectRepo repository.ProjectRepository, searchRepo repository.SearchRepository, projectCache cache.ProjectCache, userRepo repository.UserRepository) ProjectService {
+	return &projectService{logger: logger, db: db, projectRepo: projectRepo, searchRepo: searchRepo, projectCache: projectCache, userRepo: userRepo}
 }
 
 type CreateUserProjectParams struct {
-	Name    string
-	Slug    string
-	Summary *string
-	Type    models.ProjectType
-	UserId  string
+	Name      string
+	Slug      string
+	Summary   *string
+	Type      models.ProjectType
+	Downloads int64
+	UserId    string
 }
 
 func (s *projectService) CreateUserProject(ctx context.Context, params CreateUserProjectParams) (*models.Project, error) {
@@ -52,7 +55,7 @@ func (s *projectService) CreateUserProject(ctx context.Context, params CreateUse
 		Summary:     params.Summary,
 		Description: nil,
 		IconUrl:     nil,
-		Downloads:   0,
+		Downloads:   params.Downloads,
 		Type:        params.Type,
 		Status:      models.ProjectStatusDraft,
 		CreatedAt:   now,
@@ -99,12 +102,12 @@ func (s *projectService) CreateUserProject(ctx context.Context, params CreateUse
 	}
 
 	if project.Status == models.ProjectStatusApproved {
-	go func() {
-		err = s.searchRepo.IndexProject(context.Background(), project)
-		if err != nil {
-			s.logger.Error("Failed to index project.", "Project: ", project, "Error: ", err)
-		}
-	}()
+		go func() {
+			err = s.searchRepo.IndexProject(context.Background(), project)
+			if err != nil {
+				s.logger.Error("Failed to index project.", "Project: ", project, "Error: ", err)
+			}
+		}()
 	}
 
 	return project, nil
@@ -344,4 +347,39 @@ func (s *projectService) DeleteProject(ctx context.Context, params DeleteProject
 	}()
 
 	return nil
+}
+
+type GetProjectsByUserIdParams struct {
+	UserId        string
+	SessionUserId string
+}
+
+func (s *projectService) GetProjectsByUserId(ctx context.Context, params GetProjectsByUserIdParams) ([]models.Project, error) {
+	user, err := s.userRepo.FindUserByIdentifier(ctx, s.db, params.UserId)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if user == nil {
+		return nil, custom_errors.ErrUserNotFound
+	}
+
+	var status = models.ProjectStatusApproved
+
+	if params.UserId == params.SessionUserId {
+		status = models.ProjectStatusDraft
+	}
+
+	projects, err := s.projectRepo.FindProjectsByUserId(ctx, s.db, params.UserId, status)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if projects == nil {
+		return nil, custom_errors.ErrNoProjectsFound
+	}
+
+	return projects, nil
 }

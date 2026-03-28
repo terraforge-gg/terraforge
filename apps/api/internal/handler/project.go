@@ -35,7 +35,7 @@ func NewProjectHandler(cfg *config.Config, logger *slog.Logger, projectService s
 func (h *ProjectHandler) GetProjectByIdentifier(c *echo.Context) error {
 	ctx := c.Request().Context()
 	identifier := c.Param("identifier")
-	userId, _ := utils.GetUserId(c)
+	userId, _ := utils.GetSessionUserId(c)
 
 	project, err := h.projectService.GetProjectByIdentifier(ctx, service.GetProjectByIdentifierParams{
 		Identifier: identifier,
@@ -65,7 +65,7 @@ func (h *ProjectHandler) GetProjectByIdentifier(c *echo.Context) error {
 func (h *ProjectHandler) GetProjectMembers(c *echo.Context) error {
 	ctx := c.Request().Context()
 	identifier := c.Param("identifier")
-	userId, _ := utils.GetUserId(c)
+	userId, _ := utils.GetSessionUserId(c)
 
 	members, err := h.projectService.GetProjectMembers(ctx, service.GetProjectMembersParams{
 		Identifier: identifier,
@@ -100,7 +100,7 @@ func (h *ProjectHandler) GetProjectMembers(c *echo.Context) error {
 
 func (h *ProjectHandler) CreateProject(c *echo.Context) error {
 	ctx := c.Request().Context()
-	userId, ok := utils.GetUserId(c)
+	userId, ok := utils.GetSessionUserId(c)
 
 	if !ok {
 		return c.JSON(http.StatusUnauthorized, dto.ProblemDetails{
@@ -168,7 +168,7 @@ func (h *ProjectHandler) CreateProject(c *echo.Context) error {
 func (h *ProjectHandler) UpdateProject(c *echo.Context) error {
 	ctx := c.Request().Context()
 	identifier := c.Param("identifier")
-	userId, ok := utils.GetUserId(c)
+	userId, ok := utils.GetSessionUserId(c)
 
 	if !ok {
 		return c.JSON(http.StatusUnauthorized, dto.ProblemDetails{
@@ -227,7 +227,7 @@ func (h *ProjectHandler) UpdateProject(c *echo.Context) error {
 func (h *ProjectHandler) DeleteProject(c *echo.Context) error {
 	ctx := c.Request().Context()
 	identifier := c.Param("identifier")
-	userId, ok := utils.GetUserId(c)
+	userId, ok := utils.GetSessionUserId(c)
 
 	if !ok {
 		return c.JSON(http.StatusUnauthorized, dto.ProblemDetails{
@@ -265,8 +265,8 @@ func (h *ProjectHandler) DeleteProject(c *echo.Context) error {
 }
 
 func (h *ProjectHandler) SearchProjects(c *echo.Context) error {
-	query := c.QueryParam("query")
 	ctx := c.Request().Context()
+	query := c.QueryParam("query")
 
 	limit, err := strconv.ParseInt(c.QueryParam("limit"), 10, 64)
 	if err != nil || limit < 1 {

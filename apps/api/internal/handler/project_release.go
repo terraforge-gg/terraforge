@@ -31,7 +31,7 @@ func NewProjectReleaseHandler(cfg *config.Config, logger *slog.Logger, projectRe
 func (h *ProjectReleaseHandler) CreateRelease(c *echo.Context) error {
 	ctx := c.Request().Context()
 	identifier := c.Param("identifier")
-	userId, ok := utils.GetUserId(c)
+	userId, ok := utils.GetSessionUserId(c)
 
 	if !ok {
 		return c.JSON(http.StatusUnauthorized, dto.ProblemDetails{
@@ -153,7 +153,7 @@ func (h *ProjectReleaseHandler) GetRelease(c *echo.Context) error {
 	ctx := c.Request().Context()
 	projectIdentifier := c.Param("identifier")
 	releaseId := c.Param("releaseId")
-	userId, _ := utils.GetUserId(c)
+	userId, _ := utils.GetSessionUserId(c)
 
 	version, err := h.projectReleaseService.GetReleaseByIdWithDependencies(ctx, projectIdentifier, releaseId, userId)
 
@@ -186,7 +186,7 @@ func (h *ProjectReleaseHandler) GetRelease(c *echo.Context) error {
 func (h *ProjectReleaseHandler) GetReleases(c *echo.Context) error {
 	ctx := c.Request().Context()
 	identifier := c.Param("identifier")
-	userId, _ := utils.GetUserId(c)
+	userId, _ := utils.GetSessionUserId(c)
 
 	versions, err := h.projectReleaseService.GetReleasesByProjectId(ctx, identifier, userId)
 
@@ -219,7 +219,7 @@ func (h *ProjectReleaseHandler) GetReleases(c *echo.Context) error {
 func (h *ProjectReleaseHandler) GeneratePresignedPutUrl(c *echo.Context) error {
 	ctx := c.Request().Context()
 	identifier := c.Param("identifier")
-	userId, ok := utils.GetUserId(c)
+	userId, ok := utils.GetSessionUserId(c)
 
 	if !ok {
 		return c.JSON(http.StatusUnauthorized, dto.ProblemDetails{

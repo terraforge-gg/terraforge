@@ -28,8 +28,8 @@ func NewLoaderVersionHandler(cfg *config.Config, logger *slog.Logger, loaderVers
 }
 
 func (h *LoaderVersionHandler) GetLoaderVersionById(c *echo.Context) error {
-	id := c.Param("id")
 	ctx := c.Request().Context()
+	id := c.Param("id")
 	LoaderVersion, err := h.loaderVersionService.GetLoaderVersionById(ctx, id)
 
 	if err != nil {

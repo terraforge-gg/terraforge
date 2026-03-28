@@ -5,7 +5,7 @@ import {
   InputGroupInput,
   InputGroupAddon,
   InputGroupButton,
-} from "../ui/input-group";
+} from "@/components/ui/input-group";
 import { Options } from "nuqs";
 
 type ProjectSearchProps = {
@@ -15,19 +15,17 @@ type ProjectSearchProps = {
     options?: Options | undefined,
   ) => Promise<URLSearchParams>;
   clearSearchParams: () => void;
-  total?: number;
 };
 
 const ProjectSearch = ({
   query,
   setQuery,
   clearSearchParams,
-  total,
 }: ProjectSearchProps) => {
   return (
     <InputGroup className="h-12">
       <InputGroupInput
-        placeholder={total ? "Search mods..." : "No mods :("}
+        placeholder="Search mods..."
         value={query ?? ""}
         onChange={(e) => setQuery(e.target.value || null)}
       />

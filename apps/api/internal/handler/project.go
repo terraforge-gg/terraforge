@@ -217,7 +217,11 @@ func (h *ProjectHandler) UpdateProject(c *echo.Context) error {
 				Detail: "You are not authorised to perform this action",
 			})
 		default:
-			panic(err)
+			h.logger.Error("Unhandled update project error", "Error:", err)
+			return c.JSON(http.StatusInternalServerError, dto.ProblemDetails{
+				Title:  "Internal Server Error",
+				Status: http.StatusInternalServerError,
+			})
 		}
 	}
 
@@ -257,7 +261,11 @@ func (h *ProjectHandler) DeleteProject(c *echo.Context) error {
 				Detail: "You are not authorised to perform this action",
 			})
 		default:
-			panic(err)
+			h.logger.Error("Unhandled delete project error", "Error:", err)
+			return c.JSON(http.StatusInternalServerError, dto.ProblemDetails{
+				Title:  "Internal Server Error",
+				Status: http.StatusInternalServerError,
+			})
 		}
 	}
 
@@ -283,7 +291,15 @@ func (h *ProjectHandler) SearchProjects(c *echo.Context) error {
 		limit = maxLimit
 	}
 
-	projects, totalHits := h.searchService.SearchProjects(ctx, query, "mod", limit, offset)
+	projects, totalHits, err := h.searchService.SearchProjects(ctx, query, "mod", limit, offset)
+
+	if err != nil {
+		h.logger.Error("Unhandled search project error", "Error:", err)
+		return c.JSON(http.StatusInternalServerError, dto.ProblemDetails{
+			Title:  "Internal Server Error",
+			Status: http.StatusInternalServerError,
+		})
+	}
 
 	response := dto.ProjectToProjectSearchResponse(projects, totalHits, limit, offset)
 

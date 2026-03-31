@@ -21,7 +21,7 @@ type ProjectService interface {
 	GetProjectMembers(ctx context.Context, params GetProjectMembersParams) ([]models.ProjectMember, error)
 	UpdateProject(ctx context.Context, params UpdateProjectParams) (*models.Project, error)
 	DeleteProject(ctx context.Context, params DeleteProjectParams) error
-	GetProjectsByUserId(ctx context.Context, params GetProjectsByUserIdParams) ([]models.Project, error)
+	GetProjectsByUserIdentifier(ctx context.Context, params GetProjectsByUserIdentifierParams) ([]models.Project, error)
 }
 
 type projectService struct {
@@ -66,7 +66,7 @@ func (s *projectService) CreateUserProject(ctx context.Context, params CreateUse
 	tx, err := s.db.BeginTx(ctx, nil)
 
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	defer tx.Rollback()
@@ -198,8 +198,9 @@ type UpdateProjectParams struct {
 
 func (s *projectService) UpdateProject(ctx context.Context, params UpdateProjectParams) (*models.Project, error) {
 	tx, err := s.db.BeginTx(ctx, nil)
+
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	defer tx.Rollback()
@@ -207,7 +208,7 @@ func (s *projectService) UpdateProject(ctx context.Context, params UpdateProject
 	project, err := s.projectRepo.FindProjectByIdentifier(ctx, tx, params.Identifier, params.UserId)
 
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	if project == nil {
@@ -217,7 +218,7 @@ func (s *projectService) UpdateProject(ctx context.Context, params UpdateProject
 	projectMember, err := s.projectRepo.FindProjectMemberByProjectIdAndUserId(ctx, s.db, project.Id, params.UserId)
 
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	if projectMember == nil {
@@ -263,13 +264,13 @@ func (s *projectService) UpdateProject(ctx context.Context, params UpdateProject
 	err = s.projectRepo.UpdateProject(ctx, tx, *project)
 
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	err = tx.Commit()
 
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	if project.Status == models.ProjectStatusApproved {
@@ -295,7 +296,7 @@ func (s *projectService) DeleteProject(ctx context.Context, params DeleteProject
 	tx, err := s.db.BeginTx(ctx, nil)
 
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	defer tx.Rollback()
@@ -327,10 +328,14 @@ func (s *projectService) DeleteProject(ctx context.Context, params DeleteProject
 	deletedAt := time.Now().UTC()
 	err = s.projectRepo.DeleteProjectByIdentifier(ctx, tx, project.Id, deletedAt)
 
+	if err != nil {
+		return err
+	}
+
 	err = tx.Commit()
 
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	err = s.projectCache.DeleteProject(ctx, project.Id)
@@ -349,13 +354,13 @@ func (s *projectService) DeleteProject(ctx context.Context, params DeleteProject
 	return nil
 }
 
-type GetProjectsByUserIdParams struct {
-	UserId        string
-	SessionUserId string
+type GetProjectsByUserIdentifierParams struct {
+	UserIdentifier string
+	SessionUserId  string
 }
 
-func (s *projectService) GetProjectsByUserId(ctx context.Context, params GetProjectsByUserIdParams) ([]models.Project, error) {
-	user, err := s.userRepo.FindUserByIdentifier(ctx, s.db, params.UserId)
+func (s *projectService) GetProjectsByUserIdentifier(ctx context.Context, params GetProjectsByUserIdentifierParams) ([]models.Project, error) {
+	user, err := s.userRepo.FindUserByIdentifier(ctx, s.db, params.UserIdentifier)
 
 	if err != nil {
 		return nil, err
@@ -367,11 +372,11 @@ func (s *projectService) GetProjectsByUserId(ctx context.Context, params GetProj
 
 	var status = models.ProjectStatusApproved
 
-	if params.UserId == params.SessionUserId {
+	if user.Id == params.SessionUserId {
 		status = models.ProjectStatusDraft
 	}
 
-	projects, err := s.projectRepo.FindProjectsByUserId(ctx, s.db, params.UserId, status)
+	projects, err := s.projectRepo.FindProjectsByUserIdentifier(ctx, s.db, params.UserIdentifier, status)
 
 	if err != nil {
 		return nil, err

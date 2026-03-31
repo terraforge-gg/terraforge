@@ -50,7 +50,7 @@ const Navbar = () => {
                 <DropdownMenuContent>
                   <DropdownMenuLabel>My Account</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <Link href="/">
+                  <Link href={`/user/${session.user.username}`}>
                     <DropdownMenuItem className="hover:cursor-pointer hover:bg-accent">
                       <User2Icon className="mr-2 h-4 w-4" />
                       <span>Profile</span>

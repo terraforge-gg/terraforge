@@ -19,7 +19,6 @@ import (
 )
 
 type CreateProjectReleaseDependencyParams struct {
-	ReleaseId        string
 	ProjectId        string
 	MinVersionNumber *string
 	Type             string
@@ -98,7 +97,7 @@ func (s *projectReleaseService) CreateRelease(ctx context.Context, projectIdenti
 	tx, err := s.db.BeginTx(ctx, nil)
 
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	defer tx.Rollback()
@@ -197,7 +196,7 @@ func (s *projectReleaseService) CreateRelease(ctx context.Context, projectIdenti
 	seen := make(map[string]bool)
 
 	for _, d := range params.Dependencies {
-		key := d.ReleaseId
+		key := d.ProjectId
 
 		if !seen[key] {
 			seen[key] = true
@@ -255,7 +254,11 @@ func (s *projectReleaseService) CreateRelease(ctx context.Context, projectIdenti
 		}
 	}
 
-	s.projectRepo.UpdateProject(ctx, tx, *project)
+	err = s.projectRepo.UpdateProject(ctx, tx, *project)
+
+	if err != nil {
+		return nil, err
+	}
 
 	err = tx.Commit()
 

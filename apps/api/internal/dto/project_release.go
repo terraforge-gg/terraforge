@@ -14,7 +14,7 @@ type CreateProjectReleaseRequestDependency struct {
 
 type CreateProjectReleaseRequest struct {
 	Name            string                                  `json:"name" validate:"required,min=3,max=100"`
-	VersionNumber   string                                  `json:"versionNumber" validate:"required"`
+	VersionNumber   string                                  `json:"versionNumber" validate:"required,semver"`
 	Changelog       *string                                 `json:"changelog"`
 	LoaderVersionId string                                  `json:"loaderVersionId" validate:"required"`
 	FileUrl         string                                  `json:"fileUrl" validate:"required,file_url"`

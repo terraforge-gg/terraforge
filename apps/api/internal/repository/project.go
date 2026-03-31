@@ -19,7 +19,7 @@ type ProjectRepository interface {
 	FindProjectMemberByProjectIdAndUserId(ctx context.Context, q database.Querier, projectId string, userId string) (*models.ProjectMember, error)
 	UpdateProject(ctx context.Context, q database.Querier, project models.Project) error
 	DeleteProjectByIdentifier(ctx context.Context, q database.Querier, identifier string, deletedAt time.Time) error
-	FindProjectsByUserId(ctx context.Context, q database.Querier, userId string, status models.ProjectStatus) ([]models.Project, error)
+	FindProjectsByUserIdentifier(ctx context.Context, q database.Querier, userIdentifier string, status models.ProjectStatus) ([]models.Project, error)
 }
 
 type projectRepository struct{}
@@ -291,29 +291,30 @@ func (r *projectRepository) DeleteProjectByIdentifier(ctx context.Context, q dat
 	return nil
 }
 
-func (r *projectRepository) FindProjectsByUserId(ctx context.Context, q database.Querier, userId string, projectStatus models.ProjectStatus) ([]models.Project, error) {
+func (r *projectRepository) FindProjectsByUserIdentifier(ctx context.Context, q database.Querier, userIdentifier string, projectStatus models.ProjectStatus) ([]models.Project, error) {
 
 	query := `
-		SELECT 
-			id,
-			name,
-			slug,
-			summary,
-			description,
-			"iconUrl",
-			downloads,
-			type,
-			status,
-			"createdAt",
-			"updatedAt",
-			"deletedAt",
-			"userId"
-		FROM "active_project"
-		WHERE "userId" = $1 AND "status" = $2
-		ORDER BY "downloads" DESC, "updatedAt" DESC LIMIT 100;
+		SELECT
+			p."id",
+			p."name",
+			p."slug",
+			p."summary",
+			p."description",
+			p."iconUrl",
+			p."downloads",
+			p."type",
+			p."status",
+			p."createdAt",
+			p."updatedAt",
+			p."deletedAt",
+			p."userId"
+		FROM "active_project" p
+		JOIN "user" u ON p."userId" = u."id"
+		WHERE (u."id" = $1 OR u."username" = $1) AND p."status" = $2
+		ORDER BY p."downloads" DESC, p."updatedAt" DESC LIMIT 100;
 	`
 
-	rows, err := q.QueryContext(ctx, query, userId, projectStatus)
+	rows, err := q.QueryContext(ctx, query, userIdentifier, projectStatus)
 	if err != nil {
 		return nil, err
 	}

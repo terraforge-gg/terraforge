@@ -101,7 +101,7 @@ export interface paths {
             query?: never;
             header?: never;
             path: {
-                /** @description The id or slug of the project */
+                /** @description The id or slug of a project */
                 "id|slug": components["parameters"]["ProjectIdentifier"];
             };
             cookie?: never;
@@ -112,7 +112,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    /** @description The id or slug of the project */
+                    /** @description The id or slug of a project */
                     "id|slug": components["parameters"]["ProjectIdentifier"];
                 };
                 cookie?: never;
@@ -156,7 +156,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    /** @description The id or slug of the project */
+                    /** @description The id or slug of a project */
                     "id|slug": components["parameters"]["ProjectIdentifier"];
                 };
                 cookie?: never;
@@ -198,7 +198,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    /** @description The id or slug of the project */
+                    /** @description The id or slug of a project */
                     "id|slug": components["parameters"]["ProjectIdentifier"];
                 };
                 cookie?: never;
@@ -245,7 +245,7 @@ export interface paths {
             query?: never;
             header?: never;
             path: {
-                /** @description The id or slug of the project */
+                /** @description The id or slug of a project */
                 "id|slug": components["parameters"]["ProjectIdentifier"];
             };
             cookie?: never;
@@ -256,7 +256,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    /** @description The id or slug of the project */
+                    /** @description The id or slug of a project */
                     "id|slug": components["parameters"]["ProjectIdentifier"];
                 };
                 cookie?: never;
@@ -291,57 +291,12 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/loader-versions": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List of loader versions */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description successful operation */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["LoaderVersion"][];
-                    };
-                };
-                /** @description Internal server error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ProblemDetails"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/projects/{id|slug}/releases/upload-url": {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                /** @description The id or slug of the project */
+                /** @description The id or slug of a project */
                 "id|slug": components["parameters"]["ProjectIdentifier"];
             };
             cookie?: never;
@@ -354,7 +309,7 @@ export interface paths {
                 };
                 header?: never;
                 path: {
-                    /** @description The id or slug of the project */
+                    /** @description The id or slug of a project */
                     "id|slug": components["parameters"]["ProjectIdentifier"];
                 };
                 cookie?: never;
@@ -412,7 +367,7 @@ export interface paths {
             query?: never;
             header?: never;
             path: {
-                /** @description The id or slug of the project */
+                /** @description The id or slug of a project */
                 "id|slug": components["parameters"]["ProjectIdentifier"];
             };
             cookie?: never;
@@ -423,7 +378,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    /** @description The id or slug of the project */
+                    /** @description The id or slug of a project */
                     "id|slug": components["parameters"]["ProjectIdentifier"];
                 };
                 cookie?: never;
@@ -466,7 +421,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    /** @description The id or slug of the project */
+                    /** @description The id or slug of a project */
                     "id|slug": components["parameters"]["ProjectIdentifier"];
                 };
                 cookie?: never;
@@ -497,6 +452,111 @@ export interface paths {
                 };
             };
         };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/loader-versions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List of loader versions */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description successful operation */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["LoaderVersion"][];
+                    };
+                };
+                /** @description Internal server error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/users/{id|username}/projects": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The id or username of a user */
+                "id|username": components["parameters"]["UserIdentifier"];
+            };
+            cookie?: never;
+        };
+        /** List of user projects */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The id or username of a user */
+                    "id|username": components["parameters"]["UserIdentifier"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description successful operation */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Project"][];
+                    };
+                };
+                /** @description not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Internal server error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -669,8 +729,10 @@ export interface components {
     };
     responses: never;
     parameters: {
-        /** @description The id or slug of the project */
+        /** @description The id or slug of a project */
         ProjectIdentifier: string;
+        /** @description The id or username of a user */
+        UserIdentifier: string;
     };
     requestBodies: never;
     headers: never;

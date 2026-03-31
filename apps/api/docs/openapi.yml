@@ -185,31 +185,9 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ProblemDetails"
-  /loader-versions:
-    get:
-      tags:
-        - Loader versions
-      summary: List of loader versions
-      security: []
-      responses:
-        '200':
-          description: successful operation
-          content:
-              application/json:
-                schema:
-                  type: array
-                  minItems: 0
-                  items:
-                    $ref: '#/components/schemas/LoaderVersion'
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProblemDetails'
   /projects/{id|slug}/releases/upload-url:
     parameters:
-      - $ref: '#/components/parameters/ProjectIdentifier'
+      - $ref: "#/components/parameters/ProjectIdentifier"
     get:
       tags:
         - Projects
@@ -222,59 +200,59 @@ paths:
             type: integer
             format: int64
       responses:
-        '200':
+        "200":
           description: successful operation
           content:
-              application/json:
-                schema:
-                  type: string
-        '400':
+            application/json:
+              schema:
+                type: string
+        "400":
           description: Bad request
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ProblemDetails'
-        '401':
+                $ref: "#/components/schemas/ProblemDetails"
+        "401":
           description: Unauthorised
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ProblemDetails'
-        '404':
+                $ref: "#/components/schemas/ProblemDetails"
+        "404":
           description: Not found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ProblemDetails'
+                $ref: "#/components/schemas/ProblemDetails"
   /projects/{id|slug}/releases:
     parameters:
-      - $ref: '#/components/parameters/ProjectIdentifier'
+      - $ref: "#/components/parameters/ProjectIdentifier"
     get:
       tags:
         - Projects
       summary: Get project releases
       responses:
-        '200':
+        "200":
           description: successful operation
           content:
-              application/json:
-                schema:
-                  type: array
-                  minItems: 0
-                  items:
-                    $ref: '#/components/schemas/ProjectRelease'
-        '400':
+            application/json:
+              schema:
+                type: array
+                minItems: 0
+                items:
+                  $ref: "#/components/schemas/ProjectRelease"
+        "400":
           description: Bad request
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ProblemDetails'
-        '404':
+                $ref: "#/components/schemas/ProblemDetails"
+        "404":
           description: Not found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ProblemDetails'
+                $ref: "#/components/schemas/ProblemDetails"
     post:
       tags:
         - Projects
@@ -284,27 +262,86 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateProjectReleaseRequest'
+              $ref: "#/components/schemas/CreateProjectReleaseRequest"
       responses:
-        '201':
+        "201":
           description: Project release created successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ProjectRelease'
-        '400':
+                $ref: "#/components/schemas/ProjectRelease"
+        "400":
           description: Bad request
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ProblemDetails'
+                $ref: "#/components/schemas/ProblemDetails"
+  /loader-versions:
+    get:
+      tags:
+        - Loader versions
+      summary: List of loader versions
+      security: []
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                minItems: 0
+                items:
+                  $ref: "#/components/schemas/LoaderVersion"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+  /users/{id|username}/projects:
+    parameters:
+      - $ref: "#/components/parameters/UserIdentifier"
+    get:
+      tags:
+        - Users
+      summary: List of user projects
+      security: []
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                minItems: 0
+                items:
+                  $ref: "#/components/schemas/Project"
+        "404":
+          description: not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
 components:
   parameters:
     ProjectIdentifier:
       name: id|slug
       in: path
       required: true
-      description: The id or slug of the project
+      description: The id or slug of a project
+      schema:
+        type: string
+    UserIdentifier:
+      name: id|username
+      in: path
+      required: true
+      description: The id or username of a user
       schema:
         type: string
   schemas:
@@ -432,7 +469,7 @@ components:
         versionLabel:
           type: string
         buildType:
-          $ref: '#/components/schemas/LoaderVersionBuildType'
+          $ref: "#/components/schemas/LoaderVersionBuildType"
         releasedAt:
           type: string
           format: date-time
@@ -464,7 +501,7 @@ components:
         versionNumber:
           type: string
         loaderVersion:
-          $ref: '#/components/schemas/LoaderVersion'
+          $ref: "#/components/schemas/LoaderVersion"
         downloads:
           type: integer
           format: int64
@@ -487,7 +524,7 @@ components:
         dependencies:
           type: array
           items:
-            $ref: '#/components/schemas/ProjectReleaseDependency'
+            $ref: "#/components/schemas/ProjectReleaseDependency"
       required:
         - id
         - projectId
@@ -512,7 +549,7 @@ components:
         dependencyProjectId:
           type: string
         dependencyType:
-          $ref: '#/components/schemas/ProjectReleaseDependencyType'
+          $ref: "#/components/schemas/ProjectReleaseDependencyType"
         createdAt:
           type: string
           format: date-time
@@ -532,7 +569,7 @@ components:
       type: object
       properties:
         type:
-          $ref: '#/components/schemas/ProjectReleaseDependencyType'
+          $ref: "#/components/schemas/ProjectReleaseDependencyType"
         projectId:
           type: string
         minVersionNumber:
@@ -554,7 +591,7 @@ components:
         dependencies:
           type: array
           items:
-            $ref: '#/components/schemas/CreateProjectReleaseDependencyRequest'
+            $ref: "#/components/schemas/CreateProjectReleaseDependencyRequest"
       required:
         - name
         - versionNumber
@@ -640,7 +677,7 @@ components:
         message:
           type: string
           description: Human-readable error message
-  
+
   securitySchemes:
     bearerAuth:
       type: http

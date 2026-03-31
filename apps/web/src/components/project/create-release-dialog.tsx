@@ -23,7 +23,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import api from "@/lib/api/api";
-import { createProjectReleaseSchema } from "@/lib/api/models/project/create-release";
+import {
+  createProjectReleaseSchema,
+  PROJECT_RELEASE_MAX_DEPENDENCIES,
+} from "@/lib/api/models/project/create-release";
+import {
+  PROJECT_RELEASE_DEPENDENCY_TYPES,
+  type ProjectReleaseDependencyType,
+} from "@/lib/api/types";
 import { loaderVersionsQueryOptions } from "@/lib/api/query-options/loader-version";
 import { projectReleasePresignedPutUrlQueryOptions } from "@/lib/api/query-options/project-release";
 import { useForm } from "@tanstack/react-form";
@@ -33,6 +40,7 @@ import { toast } from "sonner";
 import z from "zod";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
 
 type CreateProjectReleaseDialogProps = {
   projectId: string;
@@ -54,6 +62,10 @@ const CreateProjectReleaseDialog = ({
     dependencies: [],
   };
   const [file, setFile] = useState<File | undefined>(undefined);
+  const [depProjectId, setDepProjectId] = useState("");
+  const [depType, setDepType] = useState<ProjectReleaseDependencyType>(
+    PROJECT_RELEASE_DEPENDENCY_TYPES[0],
+  );
   const form = useForm({
     defaultValues: defaultValues,
     validators: {
@@ -285,6 +297,87 @@ const CreateProjectReleaseDialog = ({
                     </Select>
                     {isInvalid && (
                       <FieldError errors={field.state.meta.errors} />
+                    )}
+                  </Field>
+                );
+              }}
+            />
+          </FieldGroup>
+          <FieldGroup>
+            <form.Field
+              name="dependencies"
+              children={(field) => {
+                const deps = field.state.value ?? [];
+                const canAdd = deps.length < PROJECT_RELEASE_MAX_DEPENDENCIES;
+                return (
+                  <Field>
+                    <FieldLabel>Dependencies</FieldLabel>
+                    <div className="flex gap-2">
+                      <InputGroup className="flex-1">
+                        <InputGroupInput
+                          placeholder="Project ID"
+                          value={depProjectId}
+                          onChange={(e) => setDepProjectId(e.target.value)}
+                          autoComplete="off"
+                        />
+                      </InputGroup>
+                      <Select
+                        value={depType}
+                        onValueChange={(v) =>
+                          setDepType(v as ProjectReleaseDependencyType)
+                        }
+                      >
+                        <SelectTrigger className="w-28">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent position="popper">
+                          <SelectGroup>
+                            {PROJECT_RELEASE_DEPENDENCY_TYPES.map((t) => (
+                              <SelectItem key={t} value={t}>
+                                {t}
+                              </SelectItem>
+                            ))}
+                          </SelectGroup>
+                        </SelectContent>
+                      </Select>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        disabled={!canAdd || !depProjectId}
+                        onClick={() => {
+                          field.pushValue({
+                            type: depType,
+                            projectId: depProjectId,
+                          });
+                          setDepProjectId("");
+                        }}
+                      >
+                        Add
+                      </Button>
+                    </div>
+                    {deps.length > 0 && (
+                      <div className="mt-1.5 flex flex-wrap gap-1.5">
+                        {deps.map((dep, i) => (
+                          <Badge
+                            key={`${dep.projectId}-${i}`}
+                            variant="secondary"
+                            className="gap-1 pr-1"
+                          >
+                            <span className="max-w-32 truncate">
+                              {dep.projectId}
+                            </span>
+                            <span className="opacity-60">{dep.type}</span>
+                            <button
+                              type="button"
+                              className="ml-0.5 hover:text-destructive"
+                              onClick={() => field.removeValue(i)}
+                            >
+                              ×
+                            </button>
+                          </Badge>
+                        ))}
+                      </div>
                     )}
                   </Field>
                 );

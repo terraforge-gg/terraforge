@@ -14,7 +14,7 @@ const main = async () => {
       return;
     }
 
-    await auth.api.signUpEmail({
+    const res = await auth.api.signUpEmail({
       body: {
         name: env.SEED_USER_USERNAME,
         username: env.SEED_USER_USERNAME,
@@ -24,10 +24,11 @@ const main = async () => {
       },
     });
 
-    console.log(`User '${env.SEED_USER_USERNAME}' seeded successfully`);
-  } catch {
-    console.log(`Failed to seed user '${env.SEED_USER_USERNAME}'`);
+    console.log(res.user.id);
+  } catch (error) {
+    console.log("Failed to seed user. Error: ", error);
   }
 };
 
-main();
+await main();
+process.exit(0);

@@ -69,3 +69,5 @@ export const LOADER_VERSION_BUILD_TYPE = {
   PREVIEW: "preview",
   LEGACY: "legacy",
 } as const satisfies Record<string, LoaderVersionBuildType>;
+
+export type UserIdentifier = components["parameters"]["UserIdentifier"];

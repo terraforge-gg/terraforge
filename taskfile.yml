@@ -6,29 +6,31 @@ vars:
   BUCKET_NAME: terraforge-app-dev
   AWS_REGION: eu-west-1
   LOCALSTACK_ENDPOINT: http://localhost:4566
+  GOOSE_DRIVER: postgres
+  GOOSE_DBSTRING: postgres://postgres:password@localhost:5432/terraforge?sslmode=disable
+  GOOSE_MIGRATION_DIR: ./apps/api/internal/database/migrations
 
 tasks:
-  api:build:
+  api:
     dir: ./apps/api
-    cmd: go build -o ./bin/{{.API_BINARY_NAME}} ./cmd/server/main.go
-  
-  api:start:
-    dir: ./apps/api
-    deps:
-      - task: api:build
-    cmd: ./bin/{{.API_BINARY_NAME}}
+    cmds:
+      - go build -o ./bin/{{.API_BINARY_NAME}} ./cmd/server/main.go
+      - ./bin/{{.API_BINARY_NAME}}
 
-  web:start:
+  web:
     dir: ./apps/web
     cmd: pnpm run dev
 
-  auth:start:
+  auth:
     dir: ./apps/auth
     cmd: pnpm run dev
 
   auth:seed:
     dir: ./apps/auth
     cmd: pnpm run seed
+
+  db:migrate:
+    cmd: goose --dir {{.GOOSE_MIGRATION_DIR}} {{.GOOSE_DRIVER}} {{.GOOSE_DBSTRING}} up
 
   create-bucket:
     desc: "Create S3 bucket in LocalStack if it doesn't already exist"

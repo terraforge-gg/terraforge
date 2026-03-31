@@ -11,8 +11,9 @@ export type GetProjectReleasePresignedPutUrlParams = {
   fileSize: number;
 };
 
-const PROJECT_RELEASE_NAME_MIN_LENGTH = 3;
-const PROJECT_RELEASE_NAME_MAX_LENGTH = 100;
+export const PROJECT_RELEASE_NAME_MIN_LENGTH = 3;
+export const PROJECT_RELEASE_NAME_MAX_LENGTH = 100;
+export const PROJECT_RELEASE_MAX_DEPENDENCIES = 16;
 
 const projectReleaseDependencySchema = z.object({
   type: z.enum(["required", "optional"]),
@@ -23,7 +24,7 @@ const projectReleaseDependencySchema = z.object({
 const semverSchema = z
   .string()
   .regex(
-    /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/,
+    /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-[a-zA-Z0-9.]+)?$/,
     "Must be valid semver (e.g., 1.2.3)",
   );
 
@@ -46,7 +47,10 @@ export const createProjectReleaseSchema = z.object({
       return false;
     }
   }),
-  dependencies: z.array(projectReleaseDependencySchema).optional(),
+  dependencies: z
+    .array(projectReleaseDependencySchema)
+    .max(PROJECT_RELEASE_MAX_DEPENDENCIES)
+    .optional(),
 });
 
 export type CreateProjectReleaseSchema = z.infer<

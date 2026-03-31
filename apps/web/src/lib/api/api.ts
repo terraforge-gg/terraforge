@@ -194,6 +194,31 @@ const api = {
       return data;
     },
   },
+  user: {
+    list: cache(
+      async (userIdentifier: ProjectIdentifier): Promise<Array<Project>> => {
+        const { data, error } = await client.GET(
+          "/users/{id|username}/projects",
+          {
+            params: {
+              path: { "id|username": userIdentifier },
+            },
+          },
+        );
+
+        if (error) {
+          switch (error.status) {
+            case 404:
+              return [];
+            default:
+              throw new Error(error.detail);
+          }
+        }
+
+        return data;
+      },
+    ),
+  },
 };
 
 export default api;

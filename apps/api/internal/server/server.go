@@ -58,6 +58,10 @@ func NewServer(cfg *config.Config, logger *slog.Logger, db *sql.DB) (*echo.Echo,
 
 	authHealthCheckService := auth.NewAuthHealthCheckService(logger, cfg.AuthUrl)
 
+	generalLimiter := custom_middleware.RateLimiter(redisClient.Client, custom_middleware.RateLimitGeneral)
+	writeLimiter := custom_middleware.RateLimiter(redisClient.Client, custom_middleware.RateLimitWrite)
+	searchLimiter := custom_middleware.RateLimiter(redisClient.Client, custom_middleware.RateLimitSearch)
+
 	loaderVersionRepo := repository.NewLoaderVersionRepository()
 	loaderVersionService := service.NewLoaderVersionService(logger, db, loaderVersionRepo)
 	loaderVersionHandler := handler.NewLoaderVersionHandler(cfg, logger, loaderVersionService)
@@ -83,6 +87,7 @@ func NewServer(cfg *config.Config, logger *slog.Logger, db *sql.DB) (*echo.Echo,
 	validate.RegisterValidation("project_type", validation.ValidateProjectType)
 	validate.RegisterValidation("project_version_dependency_type", validation.ValidateProjectDependencyType)
 	validate.RegisterValidation("file_url", validation.ValidateFileUrl)
+	validate.RegisterValidation("semver", validation.ValidateSemVer)
 
 	checker := health.NewChecker(
 		health.WithCacheDuration(1*time.Second),
@@ -141,6 +146,7 @@ func NewServer(cfg *config.Config, logger *slog.Logger, db *sql.DB) (*echo.Echo,
 	e.GET("/ready", echo.WrapHandler(health.NewHandler(checker)))
 
 	v1 := e.Group("/v1")
+	v1.Use(generalLimiter)
 	v1.File("/openapi.yml", "./docs/openapi.yml")
 
 	v1.GET("/loader-versions/:id", loaderVersionHandler.GetLoaderVersionById)
@@ -148,14 +154,14 @@ func NewServer(cfg *config.Config, logger *slog.Logger, db *sql.DB) (*echo.Echo,
 
 	v1.GET("/users/:userIdentifier/projects", userHandler.GetProjectsByUserId, authOptionalMiddleware)
 
-	v1.POST("/projects", projectHandler.CreateProject, authMiddleware)
-	v1.GET("/projects", projectHandler.SearchProjects)
+	v1.POST("/projects", projectHandler.CreateProject, authMiddleware, writeLimiter)
+	v1.GET("/projects", projectHandler.SearchProjects, searchLimiter)
 	v1.GET("/projects/:identifier", projectHandler.GetProjectByIdentifier, authOptionalMiddleware)
 	v1.GET("/projects/:identifier/members", projectHandler.GetProjectMembers, authOptionalMiddleware)
-	v1.PATCH("/projects/:identifier", projectHandler.UpdateProject, authMiddleware)
-	v1.DELETE("/projects/:identifier", projectHandler.DeleteProject, authMiddleware)
+	v1.PATCH("/projects/:identifier", projectHandler.UpdateProject, authMiddleware, writeLimiter)
+	v1.DELETE("/projects/:identifier", projectHandler.DeleteProject, authMiddleware, writeLimiter)
 
-	v1.POST("/projects/:identifier/releases", projectReleaseHandler.CreateRelease, authMiddleware)
+	v1.POST("/projects/:identifier/releases", projectReleaseHandler.CreateRelease, authMiddleware, writeLimiter)
 	v1.GET("/projects/:identifier/releases", projectReleaseHandler.GetReleases, authOptionalMiddleware)
 	v1.GET("/projects/:identifier/releases/:releaseId", projectReleaseHandler.GetRelease, authOptionalMiddleware)
 	v1.GET("/projects/:identifier/releases/upload-url", projectReleaseHandler.GeneratePresignedPutUrl, authMiddleware)

@@ -32,9 +32,9 @@ func (h *UserHandler) GetProjectsByUserId(c *echo.Context) error {
 	userIdentifier := c.Param("userIdentifier")
 	userId, _ := utils.GetSessionUserId(c)
 
-	projects, err := h.projectService.GetProjectsByUserId(ctx, service.GetProjectsByUserIdParams{
-		UserId:        userIdentifier,
-		SessionUserId: userId,
+	projects, err := h.projectService.GetProjectsByUserIdentifier(ctx, service.GetProjectsByUserIdentifierParams{
+		UserIdentifier: userIdentifier,
+		SessionUserId:  userId,
 	})
 
 	if err != nil {

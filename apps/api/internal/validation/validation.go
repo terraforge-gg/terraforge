@@ -47,6 +47,8 @@ func (v *Validator) Validate(i any) error {
 				errors[field] = "invalid file url"
 			case "project_version_dependency_type":
 				errors[field] = "invalid project version dependency type"
+			case "semver":
+				errors[field] = "invalid semver"
 			default:
 				errors[field] = "Invalid"
 			}
@@ -69,6 +71,12 @@ func ValidateProjectType(fl validator.FieldLevel) bool {
 		return true
 	}
 	return false
+}
+
+var SemVerValidator = regexp.MustCompile(`^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-[a-zA-Z0-9.]+)?$`)
+
+func ValidateSemVer(fl validator.FieldLevel) bool {
+	return SemVerValidator.MatchString(fl.Field().String())
 }
 
 func ValidateProjectDependencyType(fl validator.FieldLevel) bool {

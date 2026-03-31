@@ -8,6 +8,7 @@
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",
     "prettier:fix": "prettier --write .",
+    "lint-all:fix": "pnpm run lint:fix && pnpm run prettier:fix",
     "seed": "tsx --env-file=.env ./src/seed.ts"
   },
   "dependencies": {

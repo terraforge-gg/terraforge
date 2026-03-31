@@ -9,7 +9,7 @@ import (
 )
 
 type SearchService interface {
-	SearchProjects(ctx context.Context, query string, projectType string, limit int64, offset int64) ([]models.Project, int64)
+	SearchProjects(ctx context.Context, query string, projectType string, limit int64, offset int64) ([]models.Project, int64, error)
 	Health(ctx context.Context) error
 }
 
@@ -22,11 +22,11 @@ func NewSearchService(logger *slog.Logger, searchRepo repository.SearchRepositor
 	return &searchService{logger: logger, searchRepo: searchRepo}
 }
 
-func (s *searchService) SearchProjects(ctx context.Context, query string, projectType string, limit int64, offset int64) ([]models.Project, int64) {
+func (s *searchService) SearchProjects(ctx context.Context, query string, projectType string, limit int64, offset int64) ([]models.Project, int64, error) {
 	result, err := s.searchRepo.FindProjects(ctx, query, projectType, limit, offset)
 
 	if err != nil {
-		panic(err)
+		return nil, 0, err
 	}
 
 	projects := make([]models.Project, len(result.Projects))
@@ -48,7 +48,7 @@ func (s *searchService) SearchProjects(ctx context.Context, query string, projec
 		}
 	}
 
-	return projects, result.TotalHits
+	return projects, result.TotalHits, nil
 }
 
 func (s *searchService) Health(ctx context.Context) error {

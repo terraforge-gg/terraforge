@@ -134,8 +134,8 @@ func (r *loaderVersionRepository) FindLoaderVersions(ctx context.Context, q data
 			"releasedAt",
 			"updatedAt"
 		FROM "loader_version"
-		ORDER BY "gameVersion" DESC, "buildType" ASC
-		LIMIT 10;
+		ORDER BY "releasedAt" DESC, "gameVersion" DESC, "buildType" ASC
+		LIMIT 300;
 	`
 
 	rows, err := q.QueryContext(ctx, query)

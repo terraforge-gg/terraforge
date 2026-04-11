@@ -31,9 +31,11 @@ import {
 } from "@/components/ui/input-group";
 import { env } from "@/env";
 import api from "@/lib/api/api";
+import { useState } from "react";
 
 const CreateProjectDialog = () => {
   const router = useRouter();
+  const [open, setOpen] = useState(false);
 
   const defaultValues: z.input<typeof createProjectSchema> = {
     type: "mod",
@@ -66,7 +68,7 @@ const CreateProjectDialog = () => {
   });
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button>
           <PlusIcon />

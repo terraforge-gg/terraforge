@@ -6,7 +6,7 @@ CREATE TABLE "project_release" (
     "name" TEXT NOT NULL,
     "changelog" TEXT,
     "versionNumber" TEXT NOT NULL,
-    "loaderVersionId" TEXT NOT NULL REFERENCES "loader_version" ("id") ON DELETE SET NULL,
+    "loaderVersionId" TEXT NOT NULL REFERENCES "loader_version" ("id") ON DELETE RESTRICT,
     "downloads" INTEGER DEFAULT 0 NOT NULL,
     "fileUrl" TEXT NOT NULL,
     "fileSize" INTEGER NOT NULL,
@@ -24,8 +24,8 @@ CREATE TYPE "project_release_dependency_type" AS ENUM ('required', 'optional');
 
 CREATE TABLE "project_release_dependency" (
     "id" TEXT PRIMARY KEY NOT NULL,
-    "releaseId" TEXT NOT NULL REFERENCES "project_release" ("id") ON DELETE SET NULL,
-    "dependencyProjectId" TEXT NOT NULL REFERENCES "project" ("id") ON DELETE SET NULL,
+    "releaseId" TEXT NOT NULL REFERENCES "project_release" ("id") ON DELETE CASCADE,
+    "dependencyProjectId" TEXT NOT NULL REFERENCES "project" ("id") ON DELETE CASCADE,
     "minVersionNumber" TEXT,
     "type" project_release_dependency_type DEFAULT 'required' NOT NULL,
     "createdAt" TIMESTAMP DEFAULT now() NOT NULL,
@@ -41,8 +41,6 @@ CREATE INDEX "project_release_dependency_dependencyProjectId_idx" ON "project_re
 DROP TABLE "project_release_dependency";
 
 DROP INDEX "project_release_projectId_idx";
-
-DROP INDEX "project_release_versionNumber_idx";
 
 DROP TABLE "project_release";
 

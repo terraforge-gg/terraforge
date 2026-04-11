@@ -41,6 +41,7 @@ import z from "zod";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 
 type CreateProjectReleaseDialogProps = {
   projectId: string;
@@ -52,6 +53,8 @@ const CreateProjectReleaseDialog = ({
   projectSlug,
 }: CreateProjectReleaseDialogProps) => {
   const [open, setOpen] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
+  const [showAllVersions, setShowAllVersions] = useState(false);
   const queryClient = useQueryClient();
   const defaultValues: z.input<typeof createProjectReleaseSchema> = {
     name: "",
@@ -269,32 +272,95 @@ const CreateProjectReleaseDialog = ({
               children={(field) => {
                 const isInvalid =
                   field.state.meta.isTouched && !field.state.meta.isValid;
+
+                let filteredLoaderVersions = showPreview
+                  ? loaderVersions
+                  : loaderVersions?.filter((x) => x.buildType === "stable");
+
+                if (!showAllVersions && filteredLoaderVersions) {
+                  filteredLoaderVersions = Object.values(
+                    filteredLoaderVersions.reduce<
+                      Record<string, (typeof filteredLoaderVersions)[number]>
+                    >((acc, version) => {
+                      if (
+                        !acc[version.gameVersion] ||
+                        new Date(version.releasedAt) >
+                          new Date(acc[version.gameVersion].releasedAt)
+                      ) {
+                        acc[version.gameVersion] = version;
+                      }
+                      return acc;
+                    }, {}),
+                  );
+                }
+
                 return (
-                  <Field className="max-w-56">
+                  <Field>
                     <FieldLabel htmlFor={field.name}>Loader Version</FieldLabel>
-                    <Select onValueChange={(id) => field.handleChange(id)}>
-                      <SelectTrigger
-                        className="w-full"
-                        id={field.name}
-                        disabled={isPending}
-                      >
-                        <SelectValue
-                          placeholder={
-                            isPending ? "Loading..." : "Select a loader version"
-                          }
-                        />
-                      </SelectTrigger>
-                      <SelectContent position="popper">
-                        <SelectGroup>
-                          {loaderVersions?.map((x) => (
-                            <SelectItem key={x.id} value={x.id}>
-                              {x.gameVersion} - ({x.buildType}) - (
-                              {x.versionLabel})
-                            </SelectItem>
-                          ))}
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
+                    <div className="flex flex-col gap-2">
+                      <Select onValueChange={(id) => field.handleChange(id)}>
+                        <SelectTrigger
+                          className="w-full"
+                          id={field.name}
+                          disabled={isPending}
+                        >
+                          <SelectValue
+                            placeholder={
+                              isPending
+                                ? "Loading..."
+                                : "Select a loader version"
+                            }
+                          />
+                        </SelectTrigger>
+                        <SelectContent position="popper">
+                          <SelectGroup>
+                            {filteredLoaderVersions?.map((x) => (
+                              <SelectItem key={x.id} value={x.id}>
+                                <div className="flex items-center gap-1.5">
+                                  <span>{x.gameVersion}</span>
+                                  <span>({x.versionLabel})</span>
+                                  {x.buildType === "preview" && (
+                                    <Badge>{x.buildType}</Badge>
+                                  )}
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectGroup>
+                        </SelectContent>
+                      </Select>
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-1.5">
+                          <Checkbox
+                            id="show-preview"
+                            checked={showPreview}
+                            onCheckedChange={(checked) =>
+                              setShowPreview(checked === true)
+                            }
+                          />
+                          <label
+                            htmlFor="show-preview"
+                            className="cursor-pointer text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                          >
+                            Show preview
+                          </label>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <Checkbox
+                            id="show-all-versions"
+                            checked={showAllVersions}
+                            onCheckedChange={(checked) =>
+                              setShowAllVersions(checked === true)
+                            }
+                          />
+                          <label
+                            htmlFor="show-all-versions"
+                            className="cursor-pointer text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                          >
+                            Show all versions
+                          </label>
+                        </div>
+                      </div>
+                    </div>
                     {isInvalid && (
                       <FieldError errors={field.state.meta.errors} />
                     )}

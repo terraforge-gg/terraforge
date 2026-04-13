@@ -3,6 +3,7 @@ package seed
 import (
 	"context"
 	"log/slog"
+	"regexp"
 	"strings"
 
 	"github.com/terraforge-gg/terraforge/internal/errors"
@@ -10,7 +11,6 @@ import (
 	"github.com/terraforge-gg/terraforge/internal/models"
 	"github.com/terraforge-gg/terraforge/internal/service"
 	"github.com/terraforge-gg/terraforge/internal/utils"
-	"github.com/terraforge-gg/terraforge/internal/validation"
 )
 
 func SeedLoaderVersions(logger *slog.Logger, loaderVersionService service.LoaderVersionService) error {
@@ -65,12 +65,11 @@ func SeedLoaderVersions(logger *slog.Logger, loaderVersionService service.Loader
 	return nil
 }
 
+var semVerFinder = regexp.MustCompile(`(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-[a-zA-Z0-9.]+)?`)
+
 func extractGameVersion(name string) string {
-	matches := validation.SemVerValidator.FindStringSubmatch(name)
-	if len(matches) > 1 {
-		return matches[1]
-	}
-	return ""
+	matches := semVerFinder.FindString(name)
+	return matches
 }
 
 func determineBuildType(prerelease bool, name string) models.LoaderVersionBuildType {

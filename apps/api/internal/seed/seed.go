@@ -65,11 +65,14 @@ func SeedLoaderVersions(logger *slog.Logger, loaderVersionService service.Loader
 	return nil
 }
 
-var semVerFinder = regexp.MustCompile(`(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-[a-zA-Z0-9.]+)?`)
+var gameVersionFinder = regexp.MustCompile(`^(\d+\.\d+\.\d+)`)
 
 func extractGameVersion(name string) string {
-	matches := semVerFinder.FindString(name)
-	return matches
+	matches := gameVersionFinder.FindStringSubmatch(name)
+	if len(matches) < 2 {
+		return ""
+	}
+	return matches[1]
 }
 
 func determineBuildType(prerelease bool, name string) models.LoaderVersionBuildType {

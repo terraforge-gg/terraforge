@@ -11,10 +11,10 @@ import (
 )
 
 type Validator struct {
-	cachedSet jwk.CachedSet
-	cache     *jwk.Cache
-	ctx       context.Context
-	cancel    context.CancelFunc
+	keySet jwk.Set
+	cache  *jwk.Cache
+	ctx    context.Context
+	cancel context.CancelFunc
 }
 
 func NewValidator(jwksURL string) (*Validator, error) {
@@ -44,10 +44,10 @@ func NewValidator(jwksURL string) (*Validator, error) {
 	}
 
 	return &Validator{
-		cachedSet: cachedSet,
-		cache:     c,
-		ctx:       ctx,
-		cancel:    cancel,
+		keySet: cachedSet,
+		cache:  c,
+		ctx:    ctx,
+		cancel: cancel,
 	}, nil
 }
 
@@ -57,7 +57,7 @@ func (v *Validator) Close() {
 
 func (v *Validator) ValidateToken(tokenString string) (jwt.Token, error) {
 	token, err := jwt.Parse([]byte(tokenString),
-		jwt.WithKeySet(v.cachedSet),
+		jwt.WithKeySet(v.keySet),
 		jwt.WithValidate(true),
 		jwt.WithAcceptableSkew(30*time.Second),
 	)
@@ -66,4 +66,14 @@ func (v *Validator) ValidateToken(tokenString string) (jwt.Token, error) {
 	}
 
 	return token, nil
+}
+
+func NewValidatorFromJWKS(keySet jwk.Set) *Validator {
+	ctx, cancel := context.WithCancel(context.Background())
+	return &Validator{
+		keySet: keySet,
+		cache:  nil,
+		ctx:    ctx,
+		cancel: cancel,
+	}
 }

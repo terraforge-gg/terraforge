@@ -23,6 +23,17 @@ func (e *ValidationError) Error() string {
 	return "validation failed"
 }
 
+func NewValidator() *validator.Validate {
+	validate := validator.New()
+	validate.RegisterValidation("url_slug", ValidateUrlSlug)
+	validate.RegisterValidation("project_type", ValidateProjectType)
+	validate.RegisterValidation("project_version_dependency_type", ValidateProjectDependencyType)
+	validate.RegisterValidation("file_url", ValidateFileUrl)
+	validate.RegisterValidation("semver", ValidateSemVer)
+
+	return validate
+}
+
 func (v *Validator) Validate(i any) error {
 	if err := v.Validator.Struct(i); err != nil {
 		errors := make(map[string]string)

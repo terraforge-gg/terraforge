@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/alexliesenfeld/health"
-	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v5"
 	"github.com/labstack/echo/v5/middleware"
 	"github.com/terraforge-gg/terraforge/internal/auth"
@@ -82,12 +81,7 @@ func NewServer(cfg *config.Config, logger *slog.Logger, db *sql.DB) (*echo.Echo,
 		seed.SeedLoaderVersions(logger, loaderVersionService)
 	}
 
-	validate := validator.New()
-	validate.RegisterValidation("url_slug", validation.ValidateUrlSlug)
-	validate.RegisterValidation("project_type", validation.ValidateProjectType)
-	validate.RegisterValidation("project_version_dependency_type", validation.ValidateProjectDependencyType)
-	validate.RegisterValidation("file_url", validation.ValidateFileUrl)
-	validate.RegisterValidation("semver", validation.ValidateSemVer)
+	validate := validation.NewValidator()
 
 	checker := health.NewChecker(
 		health.WithCacheDuration(1*time.Second),

@@ -12,8 +12,8 @@ import (
 )
 
 func main() {
-	logger := logger.New()
 	cfg := config.Load()
+	logger := logger.New()
 
 	db, err := database.NewPostgresConnection(cfg.DatabaseUrl)
 

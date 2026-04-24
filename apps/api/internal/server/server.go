@@ -81,7 +81,7 @@ func NewServer(cfg *config.Config, logger *slog.Logger, db *sql.DB) (*echo.Echo,
 		seed.SeedLoaderVersions(logger, loaderVersionService)
 	}
 
-	validate := validation.NewValidator()
+	validate := validation.NewValidator(cfg)
 
 	checker := health.NewChecker(
 		health.WithCacheDuration(1*time.Second),

@@ -131,6 +131,40 @@ type MockLoaderVersionService struct {
 	CreateLoaderVersionFunc           func(ctx context.Context, params CreateLoaderVersionParams) error
 }
 
+type MockObjectStoreService struct {
+	GeneratePresignedPutUrlFunc func(ctx context.Context, key string, contentType string, fileSize int64) (string, error)
+	GetFileMetadateFunc         func(ctx context.Context, key string) (*metadata, error)
+	MoveFileFunc                func(ctx context.Context, sourceKey string, destinationKey string) (string, error)
+}
+
+func NewMockObjectStoreService() *MockObjectStoreService {
+	return &MockObjectStoreService{}
+}
+
+func (m *MockObjectStoreService) GeneratePresignedPutUrl(ctx context.Context, key string, contentType string, fileSize int64) (string, error) {
+	if m.GeneratePresignedPutUrlFunc != nil {
+		return m.GeneratePresignedPutUrlFunc(ctx, key, contentType, fileSize)
+	}
+	return "https://mock-url.example.com/upload", nil
+}
+
+func (m *MockObjectStoreService) GetFileMetadate(ctx context.Context, key string) (*metadata, error) {
+	if m.GetFileMetadateFunc != nil {
+		return m.GetFileMetadateFunc(ctx, key)
+	}
+	return &metadata{
+		ContentLength: 1024,
+		ETag:          "mock-etag",
+	}, nil
+}
+
+func (m *MockObjectStoreService) MoveFile(ctx context.Context, sourceKey string, destinationKey string) (string, error) {
+	if m.MoveFileFunc != nil {
+		return m.MoveFileFunc(ctx, sourceKey, destinationKey)
+	}
+	return "/cdn/releases/" + destinationKey, nil
+}
+
 func NewMockLoaderVersionService() *MockLoaderVersionService {
 	return &MockLoaderVersionService{}
 }

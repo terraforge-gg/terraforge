@@ -97,6 +97,7 @@ func (s *projectReleaseService) CreateRelease(ctx context.Context, projectIdenti
 	tx, err := s.db.BeginTx(ctx, nil)
 
 	if err != nil {
+		s.logger.Error("Create release failed. Failed to begin transaction.", "User Id", userId, "Project Identifier", projectIdentifier, "error", err)
 		return nil, err
 	}
 
@@ -105,34 +106,41 @@ func (s *projectReleaseService) CreateRelease(ctx context.Context, projectIdenti
 	project, err := s.projectRepo.FindProjectByIdentifier(ctx, tx, projectIdentifier, userId)
 
 	if err != nil {
+		s.logger.Error("Create release failed. Failed to find project by identifier.", "User Id", userId, "Project Identifier", projectIdentifier, "error", err)
 		return nil, err
 	}
 
 	if project == nil {
+		s.logger.Info("Create release failed. Project not found.", "User Id", userId, "Project Identifier", projectIdentifier, "error", err)
 		return nil, custom_errors.ErrProjectNotFound
 	}
 
 	projectMember, err := s.projectRepo.FindProjectMemberByProjectIdAndUserId(ctx, tx, project.Id, userId)
 
 	if err != nil {
+		s.logger.Error("Create release failed. Failed to find project members.", "User Id", userId, "Project Identifier", projectIdentifier, "error", err)
 		return nil, err
 	}
 
 	if projectMember == nil {
+		s.logger.Warn("Create release failed. Project members not found.", "User Id", userId, "Project Identifier", projectIdentifier, "error", err)
 		return nil, custom_errors.ErrProjectUnauthorisedAction
 	}
 
 	if projectMember.Role != models.ProjectMemberRoleOwner {
+		s.logger.Warn("Create release failed. Project member does not have access to create a release", "User Id", userId, "Project member role", projectMember.Role, "Project Identifier", projectIdentifier, "error", err)
 		return nil, custom_errors.ErrProjectUnauthorisedAction
 	}
 
 	loaderVersion, err := s.loaderVersionRepo.FindLoaderVersionById(ctx, tx, params.LoaderVersionId)
 
 	if err != nil {
+		s.logger.Error("Create release failed. Failed to find loader version.", "User Id", userId, "Project Identifier", projectIdentifier, "error", err)
 		return nil, err
 	}
 
 	if loaderVersion == nil {
+		s.logger.Warn("Create release failed. Loader version not found", "User Id", userId, "Project member role", projectMember.Role, "Project Identifier", projectIdentifier, "Loader version Id", params.LoaderVersionId, "error", err)
 		return nil, custom_errors.ErrLoaderVersionNotFound
 	}
 
@@ -140,12 +148,14 @@ func (s *projectReleaseService) CreateRelease(ctx context.Context, projectIdenti
 	sourceKey := aws.ExtractS3Key(parsedFileUrl.Path)
 
 	if err != nil {
+		s.logger.Error("Create release failed. Failed to parse file url.", "User Id", userId, "Project Identifier", projectIdentifier, "File url", params.FileUrl, "error", err)
 		return nil, custom_errors.ErrProjectReleaseFailedToParseFileUrl
 	}
 
 	metadata, err := s.objectStoreService.GetFileMetadate(ctx, sourceKey)
 
 	if err != nil {
+		s.logger.Error("Create release failed. Uploaded file not found", "User Id", userId, "Project Identifier", projectIdentifier, "File url", params.FileUrl, "error", err)
 		return nil, custom_errors.ErrProjectReleaseUploadedFileNotFound
 	}
 

@@ -192,6 +192,14 @@ func (h *ProjectHandler) UpdateProject(c *echo.Context) error {
 		return err
 	}
 
+	if req.Name == nil && req.Slug == nil && req.Summary == nil && req.Description == nil && req.IconUrl == nil {
+		return c.JSON(http.StatusBadRequest, dto.ProblemDetails{
+			Title:  "Bad Request",
+			Status: http.StatusBadRequest,
+			Detail: "Invalid request.",
+		})
+	}
+
 	project, err := h.projectService.UpdateProject(ctx, service.UpdateProjectParams{
 		Identifier:  identifier,
 		Slug:        req.Slug,

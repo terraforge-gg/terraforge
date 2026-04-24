@@ -57,7 +57,7 @@ func TestTestDatabaseSetupInsertsTestUser(t *testing.T) {
 	}
 
 	var email string
-	err = td.Db.QueryRowContext(ctx, `SELECT email FROM "user"`).Scan(&email)
+	err = td.Db.QueryRowContext(ctx, `SELECT "email" FROM "user"`).Scan(&email)
 	if err != nil {
 		t.Fatalf("failed to query user email: %v", err)
 	}
@@ -67,4 +67,34 @@ func TestTestDatabaseSetupInsertsTestUser(t *testing.T) {
 	}
 
 	t.Log("successfully verified test user was inserted")
+}
+
+func TestTestDatabaseSetupInsertsTestLoaderVersion(t *testing.T) {
+	td, err := database.NewTestDatabaseWithCleanup(t)
+	if err != nil {
+		t.Fatalf("failed to create test database: %v", err)
+	}
+
+	ctx := context.Background()
+	var count int
+	err = td.Db.QueryRowContext(ctx, `SELECT COUNT(*) FROM "loader_version"`).Scan(&count)
+	if err != nil {
+		t.Fatalf("failed to query loader version count: %v", err)
+	}
+
+	if count != 1 {
+		t.Fatalf("expected 1 loader version, got %d", count)
+	}
+
+	var gameVersion string
+	err = td.Db.QueryRowContext(ctx, `SELECT "gameVersion" FROM "loader_version"`).Scan(&gameVersion)
+	if err != nil {
+		t.Fatalf("failed to query loader version game version: %v", err)
+	}
+
+	if gameVersion != database.TestLoaderVersionGameVersion {
+		t.Fatalf("expected game veresion 1.4.4, got %s", gameVersion)
+	}
+
+	t.Log("successfully verified test loader version was inserted")
 }

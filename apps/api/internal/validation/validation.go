@@ -3,11 +3,11 @@ package validation
 import (
 	"fmt"
 	"net/url"
-	"os"
 	"regexp"
 	"strings"
 
 	validator "github.com/go-playground/validator/v10"
+	"github.com/terraforge-gg/terraforge/internal/config"
 	"github.com/terraforge-gg/terraforge/internal/models"
 )
 
@@ -23,12 +23,12 @@ func (e *ValidationError) Error() string {
 	return "validation failed"
 }
 
-func NewValidator() *validator.Validate {
+func NewValidator(cfg *config.Config) *validator.Validate {
 	validate := validator.New()
 	validate.RegisterValidation("url_slug", ValidateUrlSlug)
 	validate.RegisterValidation("project_type", ValidateProjectType)
 	validate.RegisterValidation("project_version_dependency_type", ValidateProjectDependencyType)
-	validate.RegisterValidation("file_url", ValidateFileUrl)
+	validate.RegisterValidation("file_url", createFileUrlValidator(cfg.CdnUrl))
 	validate.RegisterValidation("semver", ValidateSemVer)
 
 	return validate
@@ -99,20 +99,21 @@ func ValidateProjectDependencyType(fl validator.FieldLevel) bool {
 	return false
 }
 
-func ValidateFileUrl(fl validator.FieldLevel) bool {
-	cdnUrl := os.Getenv("CDN_URL")
-	parsedCdnUrl, err := url.Parse(cdnUrl)
+func createFileUrlValidator(cdnUrl string) validator.Func {
+	return func(fl validator.FieldLevel) bool {
+		parsedCdnUrl, err := url.Parse(cdnUrl)
 
-	if err != nil {
-		return false
+		if err != nil {
+			return false
+		}
+
+		urlStr := fl.Field().String()
+		parsedURL, err := url.Parse(urlStr)
+
+		if err != nil {
+			return false
+		}
+
+		return strings.EqualFold(parsedURL.Host, parsedCdnUrl.Host)
 	}
-
-	urlStr := fl.Field().String()
-	parsedURL, err := url.Parse(urlStr)
-
-	if err != nil {
-		return false
-	}
-
-	return strings.EqualFold(parsedURL.Host, parsedCdnUrl.Host)
 }

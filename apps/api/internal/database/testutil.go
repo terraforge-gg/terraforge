@@ -13,6 +13,7 @@ import (
 	"github.com/testcontainers/testcontainers-go/wait"
 
 	"github.com/terraforge-gg/terraforge/internal/logger"
+	"github.com/terraforge-gg/terraforge/internal/models"
 )
 
 type TestDatabase struct {
@@ -68,6 +69,11 @@ const TestUser2Id = "2"
 const TestUser2Username = "testuser2"
 const TestUser2Email = "testuser2@example.com"
 
+const TestLoaderVersionId = "1"
+const TestLoaderVersionGameVersion = "1.4.4"
+const TestLoaderVersionVersionLabel = "2026.02.3.0"
+const TestLoaderVersionBuildType = models.LoaderVersionStatusStable
+
 func (td *TestDatabase) Setup() error {
 	if err := Migrate(td.Logger, td.Db); err != nil {
 		return err
@@ -75,6 +81,7 @@ func (td *TestDatabase) Setup() error {
 	ctx := context.Background()
 	_, err := InsertTestUser(ctx, td.Db, TestUser1Id, TestUser1Username, TestUser1Email)
 	_, err = InsertTestUser(ctx, td.Db, TestUser2Id, TestUser2Username, TestUser2Email)
+	_, err = InsertTestLoaderVersion(ctx, td.Db, TestLoaderVersionId, TestLoaderVersionGameVersion, TestLoaderVersionVersionLabel, TestLoaderVersionBuildType)
 
 	return err
 }
@@ -136,6 +143,21 @@ func InsertTestUser(ctx context.Context, db *sql.DB, id string, username, email 
 	`, id, username, username, email, true, now, now)
 	if err != nil {
 		return "", fmt.Errorf("failed to insert test user: %w", err)
+	}
+
+	return id, nil
+}
+
+func InsertTestLoaderVersion(ctx context.Context, db *sql.DB, id string, gameVersion string, versionLabel string, buildType models.LoaderVersionBuildType) (string, error) {
+	now := time.Now()
+
+	query := `INSERT INTO "loader_version"
+		("id", "gameVersion", "versionLabel", "buildType", "releasedAt", "updatedAt")
+		VALUES ($1, $2, $3, $4, $5, $6);`
+
+	_, err := db.ExecContext(ctx, query, id, gameVersion, versionLabel, buildType, now, now)
+	if err != nil {
+		return "", fmt.Errorf("failed to insert test loader version: %w", err)
 	}
 
 	return id, nil
